@@ -2,29 +2,65 @@
 
 import React, { useState, useEffect } from 'react';
 
+
+// =======================================================================
+// TODO: call la base de données pour obtenir les schémas réels
+const PRIMARY_KEYS_BY_LABEL = {
+  'Person': 'name',
+  'Movie': 'title',
+};
+const PROPERTIES_BY_LABEL = {
+  'Person': ['name', 'born'],
+  'Movie': ['title', 'released', 'tagline'],
+};
+// =======================================================================
+
+
 const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) => {
   const [editableProperties, setEditableProperties] = useState({});
   const [primaryKey, setPrimaryKey] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (element && element.data && element.data.properties) {
-      setEditableProperties(element.data.properties);
-      setPrimaryKey(Object.keys(element.data.properties)[0]);
+    if (!element || !element.data || !element.data.properties) {
+      setEditableProperties({});
+      setPrimaryKey(null);
       setHasChanges(false);
+      return;
     }
+
+    const { label_type, properties: incomingProperties } = element.data;
+    const schemaProperties = PROPERTIES_BY_LABEL[label_type];
+
+    if (!schemaProperties) {
+      console.warn(`Schéma non défini pour le label "${label_type}". Affichage de toutes les propriétés trouvées.`);
+      setEditableProperties(incomingProperties);
+    } else {
+      const newEditableProperties = {};
+      schemaProperties.forEach(propName => {
+        newEditableProperties[propName] = incomingProperties[propName] ?? '';
+      });
+      setEditableProperties(newEditableProperties);
+    }
+    setPrimaryKey(PRIMARY_KEYS_BY_LABEL[label_type] || Object.keys(incomingProperties)[0]);
+    setHasChanges(false);
+
   }, [element]);
 
   useEffect(() => {
-    if (!element || !element.data || !element.data.properties) return;
+    if (!element || !element.data || !element.data.properties || Object.keys(editableProperties).length === 0) return;
+    
     const originalProperties = element.data.properties;
-    const areDifferent = Object.keys(originalProperties).some(
-      key => String(originalProperties[key]) !== String(editableProperties[key])
+    const schemaKeys = PROPERTIES_BY_LABEL[element.data.label_type] || Object.keys(originalProperties);
+
+    const areDifferent = schemaKeys.some(key => 
+      String(originalProperties[key] ?? '') !== String(editableProperties[key] ?? '')
     );
     setHasChanges(areDifferent);
+
   }, [editableProperties, element]);
 
-  if (!element) return null;
+  if (!element || !primaryKey) return null;
 
   const { data, isNode } = element;
 
@@ -36,15 +72,25 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
     if (!hasChanges) return;
     const { label_type } = data;
     const originalPrimaryKeyValue = data.properties[primaryKey];
+    
     const setClauses = Object.entries(editableProperties)
-      .filter(([key]) => key !== primaryKey && String(editableProperties[key]) !== String(data.properties[key]))
+      .filter(([key, value]) => {
+        return key !== primaryKey && String(value) !== String(data.properties[key] ?? '');
+      })
       .map(([key, value]) => {
-        const formattedValue = typeof value === 'string' && isNaN(value) ? `'${value.replace(/'/g, "\\'")}'` : value;
+        const isNumeric = !isNaN(parseFloat(value)) && isFinite(value) && value.trim() !== '';
+        const formattedValue = isNumeric ? value : `'${String(value).replace(/'/g, "\\'")}'`;
         return `item.${key} = ${formattedValue}`;
       })
       .join(', ');
+
     if (!setClauses) return;
-    const updateQuery = `MATCH (item:${label_type} {${primaryKey}: '${String(originalPrimaryKeyValue).replace(/'/g, "\\'")}'}) SET ${setClauses}`;
+
+    const primaryKeyValueFormatted = typeof originalPrimaryKeyValue === 'string' 
+      ? `'${String(originalPrimaryKeyValue).replace(/'/g, "\\'")}'`
+      : originalPrimaryKeyValue;
+
+    const updateQuery = `MATCH (item:${label_type} {${primaryKey}: ${primaryKeyValueFormatted}}) SET ${setClauses}`;
     onSaveChanges(updateQuery);
   };
 
@@ -54,12 +100,16 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
       return;
     }
     const { label_type } = data;
-    const primaryKeyValue = String(data.properties[primaryKey]).replace(/'/g, "\\'");
+    const primaryKeyValue = data.properties[primaryKey];
+    const primaryKeyValueFormatted = typeof primaryKeyValue === 'string' 
+      ? `'${String(primaryKeyValue).replace(/'/g, "\\'")}'`
+      : primaryKeyValue;
+      
     let deleteQuery;
     if (isNode) {
-      deleteQuery = `MATCH (item:${label_type} {${primaryKey}: '${primaryKeyValue}'}) DETACH DELETE item`;
+      deleteQuery = `MATCH (item:${label_type} {${primaryKey}: ${primaryKeyValueFormatted}}) DETACH DELETE item`;
     } else {
-      deleteQuery = `MATCH ()-[item:${label_type} {${primaryKey}: '${primaryKeyValue}'}]->() DELETE item`;
+      deleteQuery = `MATCH ()-[item:${label_type} {${primaryKey}: ${primaryKeyValueFormatted}}]->() DELETE item`;
     }
     onDeleteElement(deleteQuery);
   };
@@ -73,42 +123,42 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
 
       <div className="flex-1 overflow-y-auto space-y-3">
         <div>
-            <label className="block text-sm font-medium text-gray-500">ID Kuzu</label>
-            <p className="text-xs p-2 bg-gray-200 dark:bg-gray-700 rounded">
-              {`${data.kuzu_id.table}-${data.kuzu_id.offset}`}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Label</label>
-            <p className="p-2 bg-gray-200 dark:bg-gray-700 rounded">{data.label_type}</p>
-          </div>
-          <h4 className="font-semibold pt-2 border-t dark:border-gray-600">Propriétés</h4>
-          {Object.keys(data.properties).length > 0 ? (
-            Object.entries(editableProperties).map(([key, value]) => {
-              const isModified = String(data.properties[key]) !== String(value);
-              return (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-500 capitalize">{key}</label>
-                  <input
-                    type="text"
-                    value={value ?? ''}
-                    onChange={(e) => handlePropertyChange(key, e.target.value)}
-                    readOnly={key === primaryKey}
-                    className={`input input-bordered w-full mt-1 transition-all duration-200 
-                      ${key === primaryKey ? 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed' : ''}
-                      ${isModified ? 'border-l-4 border-l-blue-500 pl-3' : 'border-gray-300 dark:border-gray-600'}`
-                    }
-                  />
-                </div>
-              );
-            })
-          ) : (
-            <p className="text-sm text-gray-400 italic">Aucune propriété modifiable.</p>
-          )}
+          <label className="block text-sm font-medium text-gray-500">ID Kuzu</label>
+          <p className="text-xs p-2 bg-gray-200 dark:bg-gray-700 rounded">
+            {`${data.kuzu_id.table}-${data.kuzu_id.offset}`}
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-500">Label</label>
+          <p className="p-2 bg-gray-200 dark:bg-gray-700 rounded">{data.label_type}</p>
+        </div>
+        <h4 className="font-semibold pt-2 border-t dark:border-gray-600">Propriétés</h4>
+        {Object.keys(editableProperties).length > 0 ? (
+          Object.entries(editableProperties).map(([key, value]) => {
+            const isModified = String(data.properties[key] ?? '') !== String(value ?? '');
+            return (
+              <div key={key}>
+                <label className="block text-sm font-medium text-gray-500 capitalize">{key}</label>
+                <input
+                  type="text"
+                  value={value ?? ''}
+                  onChange={(e) => handlePropertyChange(key, e.target.value)}
+                  readOnly={key === primaryKey}
+                  className={`input input-bordered w-full mt-1 transition-all duration-200 
+                    ${key === primaryKey ? 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed' : ''}
+                    ${isModified ? 'border-l-4 border-l-blue-500 pl-3' : 'border-gray-300 dark:border-gray-600'}`
+                  }
+                />
+              </div>
+            );
+          })
+        ) : (
+          <p className="text-sm text-gray-400 italic">Aucune propriété définie</p>
+        )}
       </div>
 
       <div className="pt-6 border-t dark:border-gray-600 space-y-3">
-        <button
+         <button
           onClick={handleSave}
           disabled={!hasChanges}
           className={`btn w-full transition-all duration-300 font-semibold text-white rounded-lg text-base py-3

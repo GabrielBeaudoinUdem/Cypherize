@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import SettingsButton from './SettingsButton';
+import SettingsModal from './SettingsModal';
 
-const Chat = ({ onQuerySuccess, externalInput, setExternalInput }) => {
+const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
   const [messages, setMessages] = useState([]); // { sender: 'user' ou 'bot', text: string }
   const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const messagesEndRef = useRef(null);
   
   const input = externalInput;
@@ -28,11 +31,31 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput }) => {
 
     if (mode === 'ai') {
       // Mode AI
-      //TODO: Intégrer l'API AI
-      setTimeout(() => {
-        setMessages(prev => [...prev, { sender: 'bot', text: 'allo' }]);
+      try {
+        const response = await fetch("/api/ai", { 
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            config: aiConfig,
+            prompt: queryToSend,
+          }),
+        });
+        
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Erreur de l'API AI");
+        }
+        
+        const botResponseText = result.choices[0]?.message?.content || "Une erreur est survenu.";
+        setMessages(prev => [...prev, { sender: 'bot', text: botResponseText }]);
+
+      } catch (error) {
+        console.error("Erreur API AI:", error);
+        setMessages(prev => [...prev, { sender: 'bot', text: `Erreur: ${error.message}` }]);
+      } finally {
         setIsLoading(false);
-      }, 500);
+      }
     } else {
       // Mode Code
       try {
@@ -61,12 +84,22 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-white to-gray-200 dark:from-gray-900 dark:to-gray-800 border-l shadow-lg rounded-lg">      
-    {/* Sélecteur de mode */}
-          <div className="flex justify-end p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-        <div className="flex items-center bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
-          <button onClick={() => setMode('ai')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'ai' ? 'bg-purple-600 text-white dark:bg-purple-500' : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400'}`}>AI</button>
-          <button onClick={() => setMode('code')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'code' ? 'bg-blue-600 text-white dark:bg-blue-500' : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'}`}>{"<\\>"}</button>
+    <div className="relative flex flex-col h-full bg-gradient-to-br from-white to-gray-200 dark:from-gray-900 dark:to-gray-800 border-l shadow-lg rounded-lg">
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        config={aiConfig}
+        onSave={onAiConfigChange}
+      />
+
+      {/* Header avec sélecteur de mode et bouton de paramètres */}
+      <div className="flex justify-between items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+        <div className="flex-grow flex justify-end">
+          <div className="flex items-center bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
+            <button onClick={() => setMode('ai')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'ai' ? 'bg-purple-600 text-white dark:bg-purple-500' : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400'}`}>AI</button>
+            <button onClick={() => setMode('code')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'code' ? 'bg-blue-600 text-white dark:bg-blue-500' : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'}`}>{"<\\>"}</button>
+          </div>
         </div>
       </div>
 

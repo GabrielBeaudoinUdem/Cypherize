@@ -22,6 +22,10 @@ export default function Home() {
   const [selectedElement, setSelectedElement] = useState(null);
   const [chatInput, setChatInput] = useState("");
   const [lastQuery, setLastQuery] = useState("");
+  const [aiConfig, setAiConfig] = useState({
+    url: "http://localhost:1234/v1/chat/completions",
+    model: "mistralai/devstral-small-2507",
+  });
 
   const executeQuery = async (query) => {
     try {
@@ -122,7 +126,13 @@ export default function Home() {
           <GraphView data={graphData} onElementClick={handleElementClick} />
         </Allotment.Pane>
         <Allotment.Pane preferredSize="25%">
-          <Chat onQuerySuccess={handleQuerySuccess} externalInput={chatInput} setExternalInput={setChatInput} />
+          <Chat 
+            onQuerySuccess={handleQuerySuccess} 
+            externalInput={chatInput} 
+            setExternalInput={setChatInput}
+            aiConfig={aiConfig}
+            onAiConfigChange={setAiConfig}
+          />
         </Allotment.Pane>
       </Allotment>
     </main>

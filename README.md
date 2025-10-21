@@ -8,11 +8,11 @@ The interface allows direct interaction with the graph, asking questions in natu
 
 ## Technologies Used
 
-| Domain       | Technology                    |
-| ------------ | ----------------------------- |
-| **App**      | [Next.js](https://nextjs.org) |
-| **Database** | [Kuzu](https://kuzudb.com)    |
-| **AI**       | TBD                           |
+| Domain       | Technology                       |
+| ------------ | -------------------------------- |
+| **App**      | [Next.js](https://nextjs.org)    |
+| **Database** | [Kuzu](https://kuzudb.com)       |
+| **AI**       | [LM studio](https://lmstudio.ai/)|
 
 ---
 

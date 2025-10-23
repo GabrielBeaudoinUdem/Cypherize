@@ -3,10 +3,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import SettingsButton from './SettingsButton';
 import SettingsModal from './SettingsModal';
+import QueryConfirmation from './QueryConfirmation';
 
 const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
-  const [messages, setMessages] = useState([]); // { sender: 'user' ou 'bot', text: string }
+  const [messages, setMessages] = useState([]); // { id, sender, type, content }
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const messagesEndRef = useRef(null);
@@ -18,69 +19,84 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const addMessage = (sender, type, content) => {
+    setMessages(prev => [...prev, { id: Date.now(), sender, type, content }]);
+  };
+
+  const handleAiInteraction = async (payload) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/ai", {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Erreur de l'API AI");
+      }
+      
+      if (result.type === 'confirmation') {
+        addMessage('bot', 'confirmation', { query: result.query });
+      } else if (result.type === 'answer') {
+        addMessage('bot', 'text', result.text);
+      }
+
+    } catch (error) {
+      console.error("Erreur API AI:", error);
+      addMessage('bot', 'text', `Erreur: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage = { sender: 'user', text: input };
-    setMessages(prev => [...prev, userMessage]);
-    
+    addMessage('user', 'text', input);
     const queryToSend = input;
     setInput('');
-    setIsLoading(true);
 
     if (mode === 'ai') {
       // Mode AI
-      try {
-        const response = await fetch("/api/ai", { 
-          method: 'POST',
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            config: aiConfig,
-            prompt: queryToSend,
-          }),
-        });
-        
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || "Erreur de l'API AI");
-        }
-        
-        const botResponseText = result.choices[0]?.message?.content || "Une erreur est survenu.";
-        setMessages(prev => [...prev, { sender: 'bot', text: botResponseText }]);
-
-      } catch (error) {
-        console.error("Erreur API AI:", error);
-        setMessages(prev => [...prev, { sender: 'bot', text: `Erreur: ${error.message}` }]);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
+      await handleAiInteraction({ config: aiConfig, prompt: queryToSend });
+    } else { 
       // Mode Code
+      setIsLoading(true);
       try {
         const response = await fetch('/api', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: queryToSend }),
         });
-        
         const data = await response.json();
-        let botResponseText;
-
         if (response.ok) {
-          onQuerySuccess(data.result, queryToSend); 
-          botResponseText = `Résultat:\n${JSON.stringify(data.result, null, 2)}`;
+          onQuerySuccess(data.result, queryToSend);
+          addMessage('bot', 'text', `Résultat:\n${JSON.stringify(data.result, null, 2)}`);
         } else {
-          botResponseText = `Erreur: ${data.error}`;
+          addMessage('bot', 'text', `Erreur: ${data.error}`);
         }
-        setMessages(prev => [...prev, { sender: 'bot', text: botResponseText }]);
       } catch (error) {
-        setMessages(prev => [...prev, { sender: 'bot', text: `Erreur: ${error.message}` }]);
+        addMessage('bot', 'text', `Erreur: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     }
+  };
+
+  const handleConfirmQuery = async (query) => {
+    // Désactiver le composant de confirmation
+    setMessages(prev => prev.map(m => 
+        m.type === 'confirmation' ? { ...m, content: { ...m.content, confirmed: true } } : m
+    ));
+    await handleAiInteraction({ config: aiConfig, confirmedQuery: query });
+  };
+  
+  const handleCancelQuery = (messageId) => {
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      addMessage('bot', 'text', 'Opération annulée.');
   };
 
   return (
@@ -92,7 +108,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         onSave={onAiConfigChange}
       />
 
-      {/* Header avec sélecteur de mode et bouton de paramètres */}
+      {/* Header */}
       <div className="flex justify-between items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <SettingsButton onClick={() => setIsSettingsOpen(true)} />
         <div className="flex-grow flex justify-end">
@@ -105,11 +121,27 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
       {/* Zone des messages */}
       <div className="flex-1 p-6 overflow-y-auto bg-white dark:bg-gray-900">
-        {messages.map((msg, index) => (
-          <div key={index} className={`flex mb-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[70%] px-4 py-2 rounded-2xl shadow-md ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-none'}`}>
-              <pre className="whitespace-pre-wrap font-sans text-sm">{msg.text}</pre>
-            </div>
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex mb-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {msg.type === 'text' && (
+              <div className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-md ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-none'}`}>
+                <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
+              </div>
+            )}
+            {msg.type === 'confirmation' && !msg.content.confirmed && (
+                <div className="w-full">
+                    <QueryConfirmation 
+                        query={msg.content.query}
+                        onConfirm={handleConfirmQuery}
+                        onCancel={() => handleCancelQuery(msg.id)}
+                    />
+                </div>
+            )}
+             {msg.type === 'confirmation' && msg.content.confirmed && (
+                 <div className="w-full text-center text-xs italic text-gray-400">
+                    Requête confirmée...
+                 </div>
+            )}
           </div>
         ))}
         {isLoading && (

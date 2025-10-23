@@ -3,73 +3,85 @@
 import React, { useState, useEffect } from 'react';
 
 
-// =======================================================================
-// TODO: call la base de données pour obtenir les schémas réels
-const PRIMARY_KEYS_BY_LABEL = {
-  'Person': 'name',
-  'Movie': 'title',
-};
-const PROPERTIES_BY_LABEL = {
-  'Person': ['name', 'born'],
-  'Movie': ['title', 'released', 'tagline'],
-};
-// =======================================================================
-
-
 const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) => {
   const [editableProperties, setEditableProperties] = useState({});
   const [primaryKey, setPrimaryKey] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [schema, setSchema] = useState(null);
 
   useEffect(() => {
-    if (!element || !element.data || !element.data.properties) {
+    const fetchSchema = async () => {
+      try {
+        const response = await fetch('/api/schema');
+        if (!response.ok) throw new Error('Failed to fetch schema');
+        const data = await response.json();
+        setSchema(data);
+      } catch (error) {
+        console.error("Erreur de chargement du schéma:", error);
+      }
+    };
+    fetchSchema();
+  }, []);
+
+  useEffect(() => {
+    if (!element || !element.data || !element.data.properties || !schema) {
       setEditableProperties({});
       setPrimaryKey(null);
       setHasChanges(false);
       return;
     }
 
-    const { label_type, properties: incomingProperties } = element.data;
-    const schemaProperties = PROPERTIES_BY_LABEL[label_type];
+    const { label_type } = element.data;
+    const isNode = element.isNode;
 
-    if (!schemaProperties) {
-      console.warn(`Schéma non défini pour le label "${label_type}". Affichage de toutes les propriétés trouvées.`);
-      setEditableProperties(incomingProperties);
+    const tableSchema = isNode 
+      ? schema.nodeTables.find(t => t.name === label_type)
+      : schema.relTables.find(t => t.name === label_type);
+
+    if (!tableSchema) {
+      console.warn(`Schéma non défini pour le label "${label_type}".`);
+      setEditableProperties(element.data.properties);
+      setPrimaryKey(null);
     } else {
       const newEditableProperties = {};
-      schemaProperties.forEach(propName => {
-        newEditableProperties[propName] = incomingProperties[propName] ?? '';
+      tableSchema.properties.forEach(prop => {
+        newEditableProperties[prop.name] = element.data.properties[prop.name] ?? '';
       });
       setEditableProperties(newEditableProperties);
+      
+      const pk = tableSchema.properties.find(p => p.isPrimaryKey);
+      setPrimaryKey(pk ? pk.name : null);
     }
-    setPrimaryKey(PRIMARY_KEYS_BY_LABEL[label_type] || Object.keys(incomingProperties)[0]);
+    
     setHasChanges(false);
 
-  }, [element]);
+  }, [element, schema]);
 
   useEffect(() => {
     if (!element || !element.data || !element.data.properties || Object.keys(editableProperties).length === 0) return;
     
     const originalProperties = element.data.properties;
-    const schemaKeys = PROPERTIES_BY_LABEL[element.data.label_type] || Object.keys(originalProperties);
-
-    const areDifferent = schemaKeys.some(key => 
+    
+    const areDifferent = Object.keys(editableProperties).some(key => 
       String(originalProperties[key] ?? '') !== String(editableProperties[key] ?? '')
     );
     setHasChanges(areDifferent);
 
   }, [editableProperties, element]);
 
-  if (!element || !primaryKey) return null;
+  if (!element) return null;
 
   const { data, isNode } = element;
+  
+  if (!element || !data) return null;
+
 
   const handlePropertyChange = (key, value) => {
     setEditableProperties(prev => ({ ...prev, [key]: value }));
   };
-
+  
   const handleSave = () => {
-    if (!hasChanges) return;
+    if (!hasChanges || !primaryKey) return;
     const { label_type } = data;
     const originalPrimaryKeyValue = data.properties[primaryKey];
     
@@ -95,8 +107,8 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
   };
 
   const handleDelete = () => {
-    if (!onDeleteElement) {
-      console.error("onDeleteElement non fournie !");
+    if (!onDeleteElement || !primaryKey) {
+      console.error("onDeleteElement non fournie ou clé primaire inconnue !");
       return;
     }
     const { label_type } = data;
@@ -113,8 +125,8 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
     }
     onDeleteElement(deleteQuery);
   };
-
-  return (
+  
+    return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4 shadow-lg">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">{isNode ? 'Détails du Nœud' : 'Détails de la Relation'}</h3>
@@ -160,9 +172,9 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
       <div className="pt-6 border-t dark:border-gray-600 space-y-3">
          <button
           onClick={handleSave}
-          disabled={!hasChanges}
+          disabled={!hasChanges || !primaryKey}
           className={`btn w-full transition-all duration-300 font-semibold text-white rounded-lg text-base py-3
-            ${hasChanges
+            ${(hasChanges && primaryKey)
               ? 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
               : 'bg-gray-400 dark:bg-gray-700 text-gray-800 dark:text-gray-400 cursor-not-allowed'
             }`
@@ -172,7 +184,8 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
         </button>
         <button
           onClick={handleDelete}
-          className="btn w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold rounded-lg text-base py-3"
+          disabled={!primaryKey}
+          className={`btn w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold rounded-lg text-base py-3 transition-colors ${!primaryKey ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           Supprimer
         </button>

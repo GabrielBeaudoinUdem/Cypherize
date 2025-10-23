@@ -5,7 +5,7 @@ import SettingsButton from './SettingsButton';
 import SettingsModal from './SettingsModal';
 import QueryConfirmation from './QueryConfirmation';
 
-const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange }) => {
+const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
   const [messages, setMessages] = useState([]); // { id, sender, type, content }
   const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +20,13 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
   }, [messages]);
 
   const addMessage = (sender, type, content) => {
-    setMessages(prev => [...prev, { id: Date.now(), sender, type, content }]);
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    setMessages(prev => [...prev, { id: uniqueId, sender, type, content }]);
   };
 
   const handleAiInteraction = async (payload) => {
     setIsLoading(true);
+    let isSuccess = false;
     try {
       const response = await fetch("/api/ai", {
         method: 'POST',
@@ -41,13 +43,18 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         addMessage('bot', 'confirmation', { query: result.query });
       } else if (result.type === 'answer') {
         addMessage('bot', 'text', result.text);
+        if (payload.confirmedQuery) {
+            isSuccess = result.success === true;
+        }
       }
 
     } catch (error) {
       console.error("Erreur API AI:", error);
       addMessage('bot', 'text', `Erreur: ${error.message}`);
+      isSuccess = false;
     } finally {
       setIsLoading(false);
+      return isSuccess;
     }
   };
 
@@ -62,7 +69,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
     if (mode === 'ai') {
       // Mode AI
       await handleAiInteraction({ config: aiConfig, prompt: queryToSend });
-    } else { 
+    } else {
       // Mode Code
       setIsLoading(true);
       try {
@@ -87,11 +94,23 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
   };
 
   const handleConfirmQuery = async (query) => {
-    // Désactiver le composant de confirmation
     setMessages(prev => prev.map(m => 
-        m.type === 'confirmation' ? { ...m, content: { ...m.content, confirmed: true } } : m
+        m.type === 'confirmation' ? { ...m, content: { ...m.content, confirmed: true, query } } : m
     ));
-    await handleAiInteraction({ config: aiConfig, confirmedQuery: query });
+    
+    const wasSuccessful = await handleAiInteraction({ config: aiConfig, confirmedQuery: query });
+
+    if (wasSuccessful && lastQuery) {
+        try {
+            addMessage('bot', 'text', 'Mise à jour du graphe...');
+            const freshResult = await executeQuery(lastQuery);
+            onQuerySuccess(freshResult, lastQuery);
+        } catch (error) {
+            addMessage('bot', 'text', `Erreur lors de la mise à jour du graphe: ${error.message}`);
+        }
+    } else if (wasSuccessful && !lastQuery) {
+        onQuerySuccess([], '');
+    }
   };
   
   const handleCancelQuery = (messageId) => {
@@ -138,8 +157,11 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                 </div>
             )}
              {msg.type === 'confirmation' && msg.content.confirmed && (
-                 <div className="w-full text-center text-xs italic text-gray-400">
-                    Requête confirmée...
+                 <div className="w-full my-2">
+                    <div className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4 border-l-4 border-green-500 opacity-70">
+                        <p className="text-sm italic text-gray-600 dark:text-gray-300">Requête exécutée :</p>
+                        <pre className="mt-2 bg-gray-800 dark:bg-gray-900 text-white p-2 rounded-md text-xs font-mono whitespace-pre-wrap"><code>{msg.content.query}</code></pre>
+                    </div>
                  </div>
             )}
           </div>

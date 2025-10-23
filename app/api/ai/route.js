@@ -31,13 +31,13 @@ export async function POST(request) {
     if (!config || !config.url || !config.model) {
       return NextResponse.json({ error: 'Configuration du modèle IA manquante.' }, { status: 400 });
     }
-    
+
     if (confirmedQuery) {
         try {
             await executeCypherQuery(confirmedQuery);
-            return NextResponse.json({ type: 'answer', text: "La modification a été effectuée avec succès." });
+            return NextResponse.json({ type: 'answer', text: "La modification a été effectuée avec succès.", success: true });
         } catch(e) {
-            return NextResponse.json({ type: 'answer', text: `Erreur lors de l'exécution de la requête: ${e.message}` });
+            return NextResponse.json({ type: 'answer', text: `Erreur lors de l'exécution de la requête: ${e.message}`, success: false });
         }
     }
     
@@ -45,7 +45,7 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Message utilisateur manquant.' }, { status: 400 });
     }
 
-    const dbSchema = await getDbSchema();
+        const dbSchema = await getDbSchema();
     const schemaString = JSON.stringify(dbSchema, null, 2);
 
     const planningMessages = [
@@ -70,18 +70,17 @@ ${schemaString}`
         if (!plan.intent || !plan.query) throw new Error("Format JSON invalide");
     } catch(e) {
         console.error("Erreur parsing de la réponse du LLM:", e);
-        return NextResponse.json({ type: 'answer', text: "Désolé, je n'ai pas pu générer de requête valide. Essayez de reformuler." });
+        return NextResponse.json({ type: 'answer', text: "Désolé, je n'ai pas pu générer de requête valide. Essayez de reformuler.", success: false });
     }
 
     if (plan.intent === 'write') {
       return NextResponse.json({ type: 'confirmation', query: plan.query });
-
     } else if (plan.intent === 'read') {
       let queryResult;
       try {
           queryResult = await executeCypherQuery(plan.query);
       } catch (e) {
-          return NextResponse.json({ type: 'answer', text: `J'ai essayé d'exécuter une requête, mais j'ai eu une erreur: ${e.message}`});
+          return NextResponse.json({ type: 'answer', text: `J'ai essayé d'exécuter une requête, mais j'ai eu une erreur: ${e.message}`, success: false });
       }
 
       const finalAnswerMessages = [
@@ -95,9 +94,9 @@ ${schemaString}`
       const finalResponse = await callLLM(config, finalAnswerMessages);
       const answerText = finalResponse.choices[0]?.message?.content || "Je n'ai pas pu formuler de réponse.";
       
-      return NextResponse.json({ type: 'answer', text: answerText });
+      return NextResponse.json({ type: 'answer', text: answerText, success: true });
     } else {
-        return NextResponse.json({ type: 'answer', text: `Intention non reconnue: ${plan.intent}` });
+      return NextResponse.json({ type: 'answer', text: `Intention non reconnue: ${plan.intent}`, success: false });
     }
 
   } catch (error) {

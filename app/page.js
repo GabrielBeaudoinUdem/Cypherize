@@ -132,6 +132,8 @@ export default function Home() {
             setExternalInput={setChatInput}
             aiConfig={aiConfig}
             onAiConfigChange={setAiConfig}
+            executeQuery={executeQuery}
+            lastQuery={lastQuery}
           />
         </Allotment.Pane>
       </Allotment>

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import SettingsButton from './SettingsButton';
 import SettingsModal from './SettingsModal';
 import QueryConfirmation from './QueryConfirmation';
+import BDActionsButtons from './BDActionsButtons';
 
 const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
@@ -128,8 +129,9 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       />
 
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800 gap-3">
         <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+        <BDActionsButtons/>
         <div className="flex-grow flex justify-end">
           <div className="flex items-center bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-2xl overflow-hidden shadow-sm">
             <button onClick={() => setMode('ai')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'ai' ? 'bg-purple-600 text-white dark:bg-purple-500' : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400'}`}>AI</button>

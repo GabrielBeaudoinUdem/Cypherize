@@ -34,10 +34,10 @@ const ClearIcon = () => (
 
 //TODO: implémenter logique derrières les bouttons
 const BDActionsButtons = () => {
-  const buttonStyle = "p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-r border-gray-300 dark:border-gray-700 last:border-r-0";
+  const buttonStyle = "p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-r border-gray-600 last:border-r-0";
   return (
     <div className="relative group/container">
-      <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+      <div className="flex items-center bg-[#1E252B] border border-gray-600 rounded-lg overflow-hidden">
         <button onClick={() => {}} className={buttonStyle}>
           <ExportIcon />
         </button>

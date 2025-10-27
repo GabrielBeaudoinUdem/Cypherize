@@ -11,9 +11,9 @@ import { parseKuzuData } from "../lib/kuzu-parser";
 
 const GraphView = dynamic(
   () => import('./components/GraphView'),
-  { 
-    ssr: false, 
-    loading: () => <div className="flex items-center justify-center h-full w-full bg-gray-800 text-white">Chargement du graphe...</div> 
+  {
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full w-full bg-[#11181C] text-white">Chargement du graphe...</div>
   }
 );
 
@@ -66,7 +66,7 @@ export default function Home() {
         if (selectedElement) {
           const allElements = [...parsedData.nodes, ...parsedData.edges];
           const updatedModel = allElements.find((el) => el.id === selectedElement.id);
-          
+
           if (updatedModel) {
             setSelectedElement({
                 id: updatedModel.id,
@@ -82,7 +82,7 @@ export default function Home() {
       console.error("Échec de la sauvegarde.");
     }
   };
-  
+
   const handleDeleteElement = async (deleteQuery) => {
     try {
       await executeQuery(deleteQuery);
@@ -110,7 +110,7 @@ export default function Home() {
   };
 
   return (
-    <main className="h-screen w-screen text-black dark:text-white bg-gray-900">
+    <main className="h-screen w-screen text-black dark:text-white bg-[#11181C]">
       <Allotment>
         {selectedElement && (
           <Allotment.Pane preferredSize="20%">
@@ -126,9 +126,9 @@ export default function Home() {
           <GraphView data={graphData} onElementClick={handleElementClick} />
         </Allotment.Pane>
         <Allotment.Pane preferredSize="25%">
-          <Chat 
-            onQuerySuccess={handleQuerySuccess} 
-            externalInput={chatInput} 
+          <Chat
+            onQuerySuccess={handleQuerySuccess}
+            externalInput={chatInput}
             setExternalInput={setChatInput}
             aiConfig={aiConfig}
             onAiConfigChange={setAiConfig}

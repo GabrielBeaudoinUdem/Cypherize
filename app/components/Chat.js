@@ -135,8 +135,8 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         <BDActionsButtons/>
         <div className="flex-grow flex justify-end">
           <div className="flex items-center bg-[#1E252B] border border-gray-600 rounded-3xl overflow-hidden text-sm">
-            <button onClick={() => setMode('ai')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'ai' ? 'bg-[#34B27B] text-white' : 'text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400'}`}>AI</button>
-            <button onClick={() => setMode('code')} className={`flex items-center space-x-2 px-3 py-2 font-semibold transition-all duration-300 ${mode === 'code' ? 'bg-[#34B27B] text-white' : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'}`}>{"<\\>"}</button>
+            <button onClick={() => setMode('ai')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'ai' ? 'bg-[#34B27B] text-white' : 'text-gray-600 dark:text-gray-300 hover:text-white'}`}>AI</button>
+            <button onClick={() => setMode('code')} className={`flex items-center space-x-2 px-3 py-2 font-semibold transition-all duration-300 ${mode === 'code' ? 'bg-[#34B27B] text-white' : 'text-gray-600 dark:text-gray-300 hover:text-white'}`}>{"<\\>"}</button>
           </div>
         </div>
       </div>

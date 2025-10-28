@@ -155,13 +155,13 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                 onClick={() => setMode('ai')}
                 role="tab"
                 aria-selected={mode === 'ai'}
-                className={`px-2 text-sm font-medium transition-colors duration-200
+                className={`px-2 text-sm font-semibold transition-colors duration-200
                             ${mode === 'ai'
                               ? 'text-[#0B1215]'
                               : 'text-zinc-400 hover:text-white'}`}
                 title="Mode conversation IA"
               >
-                🧠 AI
+                AI
               </button>
 
               <button

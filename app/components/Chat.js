@@ -5,6 +5,7 @@ import SettingsButton from './SettingsButton';
 import SettingsModal from './SettingsModal';
 import QueryConfirmation from './QueryConfirmation';
 import BDActionsButtons from './BDActionsButtons';
+import { CheckCircle, AlertCircle  } from "lucide-react";
 
 const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
@@ -37,6 +38,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
       const result = await response.json();
       if (!response.ok) {
+        console.log(response)
         throw new Error(result.error || "Erreur de l'API AI");
       }
 
@@ -82,12 +84,12 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         const data = await response.json();
         if (response.ok) {
           onQuerySuccess(data.result, queryToSend);
-          addMessage('bot', 'text', `Résultat:\n${JSON.stringify(data.result, null, 2)}`);
+          addMessage('bot', 'success', `\n${JSON.stringify(data.result, null, 2)}`);
         } else {
-          addMessage('bot', 'text', `Erreur: ${data.error}`);
+          addMessage('bot', 'error', `${data.error}`);
         }
       } catch (error) {
-        addMessage('bot', 'text', `Erreur: ${error.message}`);
+        addMessage('bot', 'error', `${error.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -187,8 +189,35 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         {messages.map((msg) => (
           <div key={msg.id} className={`flex mb-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.type === 'text' && (
-              <div className={`max-w-[80%] px-4 py-2 rounded-2xl ${msg.sender === 'user' ? 'bg-[#34B27B] text-white' : 'bg-[#252F36] text-gray-900 dark:text-white'}`}>
+              <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-4 py-2 rounded-2xl' : 'text-gray-900 dark:text-white'}`}>
                 <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
+              </div>
+            )}
+
+
+
+            {msg.type === "success" && (
+              <div className="w-full max-w-lg mx-auto">
+                <div
+                  className="flex items-center justify-between px-0 py-1 transition-all"
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-[#34B27B]" />
+                    <span className="font-normal text-[#34B27B] text-sm">Requête exécutée avec succès.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            {msg.type === "error" && (
+              <div className="w-full max-w-lg mx-auto">
+                <div className="flex items-center justify-between px-0 py-1 transition-all">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#E45858]" />
+                    <span className="font-normal text-[#E45858] text-sm">
+                      Erreur lors de l’exécution de la requête.
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
             {msg.type === 'confirmation' && !msg.content.confirmed && (

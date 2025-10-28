@@ -133,10 +133,51 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       <div className="flex items-center p-4 dark:border-gray-700 bg-[#20282E] gap-3">
         <SettingsButton onClick={() => setIsSettingsOpen(true)} />
         <BDActionsButtons/>
+
         <div className="flex-grow flex justify-end">
-          <div className="flex items-center bg-[#1E252B] border border-gray-600 rounded-3xl overflow-hidden text-sm">
-            <button onClick={() => setMode('ai')} className={`flex items-center space-x-2 px-4 py-2 font-semibold transition-all duration-300 ${mode === 'ai' ? 'bg-[#34B27B] text-white' : 'text-gray-600 dark:text-gray-300 hover:text-white'}`}>AI</button>
-            <button onClick={() => setMode('code')} className={`flex items-center space-x-2 px-3 py-2 font-semibold transition-all duration-300 ${mode === 'code' ? 'bg-[#34B27B] text-white' : 'text-gray-600 dark:text-gray-300 hover:text-white'}`}>{"<\\>"}</button>
+          <div
+            className="relative isolate w-[110px] h-10 rounded-xl border border-[#2A3239] bg-[#1A2127] shadow-sm overflow-hidden"
+            role="tablist"
+            aria-label="Sélecteur de mode"
+          >
+            {/* Curseur glissant */}
+            <span
+              aria-hidden
+              className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-lg bg-[#34B27B] shadow-sm
+                          transition-transform duration-300 ease-out
+                          motion-reduce:transition-none
+                          ${mode === 'code' ? 'translate-x-full' : 'translate-x-0'}`}
+            />
+
+            <div className="grid grid-cols-2 h-full relative z-10">
+              <button
+                type="button"
+                onClick={() => setMode('ai')}
+                role="tab"
+                aria-selected={mode === 'ai'}
+                className={`px-2 text-sm font-medium transition-colors duration-200
+                            ${mode === 'ai'
+                              ? 'text-[#0B1215]'
+                              : 'text-zinc-400 hover:text-white'}`}
+                title="Mode conversation IA"
+              >
+                🧠 AI
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMode('code')}
+                role="tab"
+                aria-selected={mode === 'code'}
+                className={`px-2 text-sm font-semibold transition-colors duration-200
+                            ${mode === 'code'
+                              ? 'text-[#0B1215]'
+                              : 'text-zinc-400 hover:text-white'}`}
+                title="Mode requête code"
+              >
+                {"</>"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

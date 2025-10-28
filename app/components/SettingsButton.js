@@ -4,7 +4,7 @@ const SettingsButton = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="p-2 bg-[#1E252B] border border-gray-600 rounded-lg shadow-none hover:text-white text-gray-600 dark:text-gray-300 transition-colors"
+      className="p-2 bg-[#1E252B] border border-[#2A3239] rounded-lg shadow-none hover:text-white text-gray-600 dark:text-gray-300 transition-colors"
       aria-label="Paramètres"
     >
       <svg

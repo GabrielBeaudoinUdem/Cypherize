@@ -170,8 +170,13 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
           </div>
         ))}
         {isLoading && (
-          <div className="flex justify-start mb-3">
-            <div className="max-w-[70%] px-4 py-2 rounded-2xl shadow-md bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white animate-pulse rounded-bl-none">...</div>
+          <div className="flex items-center justify-start gap-2 mb-3">
+            <span
+              className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700"
+              style={{ borderTopColor: "#34B27B" }}
+              aria-label="Chargement"
+              role="status"
+            />
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -180,7 +185,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       {/* Zone de saisie */}
       <div className="flex-shrink-0 px-4 py-3 [background-color:#1A2127]">
         <form onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
-          <div className="flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl bg-white dark:bg-[#20282E] border border-zinc-200 dark:border-zinc-700/70 focus-within:ring-2 focus-within:ring-zinc-300/70 dark:focus-within:ring-zinc-700/60 pl-4 pr-1 py-1 transition-colors">
+          <div className="flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl bg-white dark:bg-[#20282E] border border-zinc-200 dark:border-zinc-700/70 pl-4 pr-1 py-1 transition-colors">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -194,7 +199,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               disabled={!input.trim() || isLoading}
               className={`inline-flex items-center justify-center shrink-0 h-9 w-9 rounded-full transition-opacity shadow ${
                 !input.trim() || isLoading
-                  ? "bg-zinc-200 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed"
+                  ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
                   : "bg-black text-white dark:bg-zinc-200 dark:text-zinc-900 hover:opacity-90"
               }`}
             >

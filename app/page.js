@@ -4,18 +4,47 @@ import { useState } from "react";
 import dynamic from 'next/dynamic';
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
-
 import Chat from "./components/Chat";
 import InspectorPanel from "./components/InspectorPanel";
 import { parseKuzuData } from "../lib/kuzu-parser";
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+});
 
 const GraphView = dynamic(
   () => import('./components/GraphView'),
   {
     ssr: false,
-    loading: () => <div className="flex items-center justify-center h-full w-full bg-[#11181C] text-white">Chargement du graphe...</div>
+    loading: () => (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#11181C] text-white z-50">
+        <h1 className={`text-2xl font-bold mb-10 tracking-wide text-[#fff] ${poppins.className}`}>
+          Cypherize<span className="text-[#34B27B]">.</span>
+        </h1>
+        <div className="w-64 h-1 bg-[#202A31] rounded-full overflow-hidden">
+          <div className="h-full bg-[#34B27B] animate-[progress_2s_ease-in-out_infinite] rounded-full" />
+        </div>
+
+        <style jsx>{`
+          @keyframes progress {
+            0% {
+              transform: translateX(-100%);
+            }
+            50% {
+              transform: translateX(0%);
+            }
+            100% {
+              transform: translateX(100%);
+            }
+          }
+        `}</style>
+      </div>
+    ),
   }
 );
+
 
 export default function Home() {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });

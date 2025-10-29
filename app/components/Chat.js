@@ -6,6 +6,8 @@ import SettingsModal from './SettingsModal';
 import QueryConfirmation from './QueryConfirmation';
 import BDActionsButtons from './BDActionsButtons';
 import { CheckCircle, AlertCircle  } from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
@@ -65,7 +67,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    addMessage('user', 'text', input);
+    addMessage('user', mode, input);
     const queryToSend = input;
     setInput('');
 
@@ -186,71 +188,158 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
       {/* Zone des messages */}
       <div className="flex-1 p-6 overflow-y-auto [background-color:#1A2127]">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex mb-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.type === 'text' && (
-              <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-4 py-2 rounded-2xl' : 'text-gray-900 dark:text-white'}`}>
-                <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
-              </div>
-            )}
-
-
-
-            {msg.type === "success" && (
-              <div className="w-full max-w-lg mx-auto">
-                <div
-                  className="flex items-center justify-between px-0 py-1 transition-all"
+        {messages.length === 0 ? (
+          <div className="flex h-full items-center justify-center px-6">
+            <div className="w-full max-w-lg text-center text-zinc-400">
+              {/* Médaillon + icône */}
+              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#1A2127] ring-1 ring-[#2A3239]">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-[#34B27B]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
                 >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-[#34B27B]" />
-                    <span className="font-normal text-[#34B27B] text-sm">Requête exécutée avec succès.</span>
-                  </div>
-                </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h6m-6 4h3m-3-8V4a1 1 0 011-1h8a1 1 0 011 1v4m4 0v8a1 1 0 01-1 1h-3l-4 4-4-4H5a1 1 0 01-1-1V8h16z"/>
+                </svg>
               </div>
-            )}
-            {msg.type === "error" && (
-              <div className="w-full max-w-lg mx-auto">
-                <div className="flex items-center justify-between px-0 py-1 transition-all">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-[#E45858]" />
-                    <span className="font-normal text-[#E45858] text-sm">
-                      Erreur lors de l’exécution de la requête.
-                    </span>
-                  </div>
-                </div>
+
+              {/* Titre + sous-titre */}
+              <h3 className="text-white font-semibold tracking-tight">
+                Bienvenue dans <span className="text-[#34B27B]">Cypherize</span>
+              </h3>
+              <p className="mt-1 text-sm">
+                Posez une question en langage naturel ou écrivez une requête <span className="font-mono text-[#34B27B]">Cypher</span>.
+              </p>
+
+              {/* Suggestions */}
+              {/*
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Trouve les 10 nœuds les plus connectés')}
+                  className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
+                >
+                  Top nœuds connectés
+                </button>
+                <button
+                  type="button"
+                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Chemin le plus court entre A et B')}
+                  className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
+                >
+                  Chemin le plus court
+                </button>
+                <button
+                  type="button"
+                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Communautés avec densité > 0.6')}
+                  className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
+                >
+                  Communautés denses
+                </button>
+              </div>*/}
+
+              {/* Aide clavier */}
+              {/*<div className="mt-4 text-[11px] text-zinc-500">
+                Entrée&nbsp;: envoyer • Maj+Entrée&nbsp;: nouvelle ligne
               </div>
-            )}
-            {msg.type === 'confirmation' && !msg.content.confirmed && (
-                <div className="w-full">
-                    <QueryConfirmation
-                        query={msg.content.query}
-                        onConfirm={handleConfirmQuery}
-                        onCancel={() => handleCancelQuery(msg.id)}
-                    />
+              */}
+            </div>
+          </div>
+        ) : (
+          <>
+          {messages.map((msg) => (
+            <div key={msg.id} className={`flex mb-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {msg.type === 'ai' && (
+                <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-4 py-2 rounded-2xl' : 'text-gray-900 dark:text-white'}`}>
+                  <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
                 </div>
-            )}
-             {msg.type === 'confirmation' && msg.content.confirmed && (
-                 <div className="w-full my-2">
-                    <div className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4 border-l-4 border-green-500 opacity-70">
-                        <p className="text-sm italic text-gray-600 dark:text-gray-300">Requête exécutée :</p>
-                        <pre className="mt-2 bg-gray-800 dark:bg-gray-900 text-white p-2 rounded-md text-xs font-mono whitespace-pre-wrap"><code>{msg.content.query}</code></pre>
+              )}
+
+              {msg.type === 'code' && (
+                <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-1.5 py-0 rounded-[6px]' : 'text-gray-900 dark:text-white'}`}>
+                <SyntaxHighlighter
+                  language="cypher"
+                  style={tomorrow}
+                  wrapLongLines
+                  PreTag="div"
+                  customStyle={{
+                    background: "#11181C",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    fontFamily: "monospace",
+                    padding: "12px",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    overflow: "hidden",     // pas de scrollbar
+                  }}
+                  codeTagProps={{
+                    style: { whiteSpace: "pre-wrap", wordBreak: "break-word" },
+                  }}
+                >
+                  {msg.content}
+                </SyntaxHighlighter>
+
+                </div>
+              )}
+
+              {msg.type === "success" && (
+                <div className="w-full max-w-lg mx-auto">
+                  <div
+                    className="flex items-center justify-between px-0 py-1 transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-[#34B27B]" />
+                      <span className="font-normal text-[#34B27B] text-sm">Requête exécutée avec succès.</span>
                     </div>
-                 </div>
-            )}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex items-center justify-start gap-2 mb-3">
-            <span
-              className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700"
-              style={{ borderTopColor: "#34B27B" }}
-              aria-label="Chargement"
-              role="status"
-            />
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+                  </div>
+                </div>
+              )}
+              {msg.type === "error" && (
+                <div className="w-full max-w-lg mx-auto">
+                  <div className="flex items-center justify-between px-0 py-1 transition-all">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-[#E45858]" />
+                      <span className="font-normal text-[#E45858] text-sm">
+                        Erreur lors de l’exécution de la requête.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {msg.type === 'confirmation' && !msg.content.confirmed && (
+                  <div className="w-full">
+                      <QueryConfirmation
+                          query={msg.content.query}
+                          onConfirm={handleConfirmQuery}
+                          onCancel={() => handleCancelQuery(msg.id)}
+                      />
+                  </div>
+              )}
+              {msg.type === 'confirmation' && msg.content.confirmed && (
+                  <div className="w-full my-2">
+                      <div className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4 border-l-4 border-green-500 opacity-70">
+                          <p className="text-sm italic text-gray-600 dark:text-gray-300">Requête exécutée :</p>
+                          <pre className="mt-2 bg-gray-800 dark:bg-gray-900 text-white p-2 rounded-md text-xs font-mono whitespace-pre-wrap"><code>{msg.content.query}</code></pre>
+                      </div>
+                  </div>
+              )}
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex items-center justify-start gap-2 mb-3">
+              <span
+                className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 dark:border-zinc-700"
+                style={{ borderTopColor: "#34B27B" }}
+                aria-label="Chargement"
+                role="status"
+              />
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </>
+      )}
+    </div>
 
       {/* Zone de saisie */}
       <div className="flex-shrink-0 px-4 py-3 [background-color:#1A2127]">

@@ -141,20 +141,34 @@ export default function Home() {
   return (
     <main className="h-screen w-screen text-black dark:text-white bg-[#11181C]">
       <Allotment>
-        {selectedElement && (
-          <Allotment.Pane preferredSize="20%">
+        <Allotment.Pane
+          visible={!!selectedElement}
+          minSize={260}
+          preferredSize={360}
+          snap
+        >
+          {selectedElement ? (
             <InspectorPanel
               element={selectedElement}
               onClose={handleCloseInspector}
               onSaveChanges={handleSaveChanges}
               onDeleteElement={handleDeleteElement}
             />
-          </Allotment.Pane>
-        )}
-        <Allotment.Pane >
+          ) : (
+            <div className="h-full w-full bg-[#11181C]" />
+          )}
+        </Allotment.Pane>
+
+        <Allotment.Pane minSize={300}>
           <GraphView data={graphData} onElementClick={handleElementClick} />
         </Allotment.Pane>
-        <Allotment.Pane preferredSize="25%">
+
+        <Allotment.Pane
+          minSize={320}
+          preferredSize={420}    // ~25%
+          maxSize={640}
+          snap
+        >
           <Chat
             onQuerySuccess={handleQuerySuccess}
             externalInput={chatInput}

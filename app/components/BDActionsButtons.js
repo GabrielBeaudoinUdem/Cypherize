@@ -13,7 +13,7 @@ const ImportIcon = () => (
 );
 
 const AiImportIconWithAnimation = () => {
-  const starClasses = "fill-current text-gray-800 dark:text-gray-300 transition-colors duration-300 ease-in-out group-hover:text-purple-500";
+  const starClasses = "fill-current text-gray-800 dark:text-gray-300 transition-colors duration-300 ease-in-out group-hover:text-[#34B27B]";
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
       <path className={starClasses} d="M7 3 L7.5 5 L9.5 5.5 L7.5 6 L7 8 L6.5 6 L4.5 5.5 L6.5 5 Z" />
@@ -34,10 +34,10 @@ const ClearIcon = () => (
 
 //TODO: implémenter logique derrières les bouttons
 const BDActionsButtons = () => {
-  const buttonStyle = "p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-r border-gray-300 dark:border-gray-700 last:border-r-0";
+  const buttonStyle = "p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-r border-[#2A3239] last:border-r-0";
   return (
     <div className="relative group/container">
-      <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+      <div className="flex items-center bg-[#1E252B] border border-[#2A3239] rounded-lg overflow-hidden">
         <button onClick={() => {}} className={buttonStyle}>
           <ExportIcon />
         </button>

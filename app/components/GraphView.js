@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import * as G6 from '@antv/g6'; 
+import * as G6 from '@antv/g6';
 
 const GraphView = ({ data, onElementClick }) => {
   const containerRef = useRef(null);
@@ -15,12 +15,12 @@ const GraphView = ({ data, onElementClick }) => {
       width: containerRef.current.scrollWidth,
       height: containerRef.current.scrollHeight,
       fitView: true,
-      modes: { 
+      modes: {
         default: ['drag-canvas', 'zoom-canvas', 'drag-node', 'drag-edge']
       },
       layout: { type: 'force', preventOverlap: true, linkDistance: 120 },
       defaultNode: { type: 'circle', size: 45, labelCfg: { style: { fill: '#fff', fontSize: 11 } } },
-      defaultEdge: { 
+      defaultEdge: {
         labelCfg: { autoRotate: true, style: { fill: '#fff', background: { fill: '#5f5f5f', padding: [2, 5], radius: 2 } } },
         style: { lineWidth: 3 }
       },
@@ -41,7 +41,7 @@ const GraphView = ({ data, onElementClick }) => {
       const element = { id: edgeId, isNode: false, data: edgeData.kuzuData };
       onElementClick(element);
     };
-    
+
     graphRef.current.on('node:click', handleNodeClick);
     graphRef.current.on('edge:click', handleEdgeClick);
 
@@ -55,7 +55,7 @@ const GraphView = ({ data, onElementClick }) => {
       }
     };
     window.addEventListener('resize', handleResize);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
     };
@@ -68,7 +68,7 @@ const GraphView = ({ data, onElementClick }) => {
     }
   }, [data]);
 
-  return <div ref={containerRef} className="h-full w-full bg-gray-800" />;
+  return <div ref={containerRef} className="h-full w-full bg-[#11181C]" />;
 };
 
 export default GraphView;

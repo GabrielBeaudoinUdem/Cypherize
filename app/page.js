@@ -51,7 +51,7 @@ export default function Home() {
             </h1>
             <p className="mt-4 text-zinc-300">
               Posez des questions en langage naturel, obtenez des requêtes Cypher optimisées
-              et des visualisations prêtes à l’emploi pour Neo4j, Memgraph, ou tout moteur compatible.
+              et des visualisations prêtes à l’emploi pour Kuzu.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -70,7 +70,7 @@ export default function Home() {
             </div>
 
             <div className="mt-6 text-xs text-zinc-400">
-              Compatible Neo4j • Cypher auto-généré • RAG sur schéma & exemples • Observabilité
+              Compatible Neo4j • Cypher auto-généré
             </div>
           </div>
 

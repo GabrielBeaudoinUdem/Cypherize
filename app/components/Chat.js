@@ -107,11 +107,11 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
     if (wasSuccessful && lastQuery) {
         try {
-            addMessage('bot', 'text', 'Mise à jour du graphe...');
+            addMessage('bot', 'success', 'Mise à jour du graphe...');
             const freshResult = await executeQuery(lastQuery);
             onQuerySuccess(freshResult, lastQuery);
         } catch (error) {
-            addMessage('bot', 'text', `Erreur lors de la mise à jour du graphe: ${error.message}`);
+            addMessage('bot', 'error', `Erreur lors de la mise à jour du graphe: ${error.message}`);
         }
     } else if (wasSuccessful && !lastQuery) {
         onQuerySuccess([], '');
@@ -256,29 +256,35 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                 </div>
               )}
 
+              {msg.type === 'text' && (
+                <div className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-md ${msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'}`}>
+                  <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
+                </div>
+              )}
+
               {msg.type === 'code' && (
                 <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-1.5 py-0 rounded-[6px]' : 'text-gray-900 dark:text-white'}`}>
-                <SyntaxHighlighter
-                  language="cypher"
-                  style={tomorrow}
-                  wrapLongLines
-                  PreTag="div"
-                  customStyle={{
-                    background: "#11181C",
-                    borderRadius: "6px",
-                    fontSize: "12px",
-                    fontFamily: "monospace",
-                    padding: "12px",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    overflow: "hidden",     // pas de scrollbar
-                  }}
-                  codeTagProps={{
-                    style: { whiteSpace: "pre-wrap", wordBreak: "break-word" },
-                  }}
-                >
-                  {msg.content}
-                </SyntaxHighlighter>
+                  <SyntaxHighlighter
+                    language="cypher"
+                    style={tomorrow}
+                    wrapLongLines
+                    PreTag="div"
+                    customStyle={{
+                      background: "#11181C",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      fontFamily: "monospace",
+                      padding: "12px",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      overflow: "hidden",     // pas de scrollbar
+                    }}
+                    codeTagProps={{
+                      style: { whiteSpace: "pre-wrap", wordBreak: "break-word" },
+                    }}
+                  >
+                    {msg.content}
+                  </SyntaxHighlighter>
 
                 </div>
               )}

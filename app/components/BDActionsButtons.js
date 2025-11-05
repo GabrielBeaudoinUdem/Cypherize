@@ -238,9 +238,9 @@ const BDActionsButtons = ({ onQuerySuccess }) => {
         <button onClick={() => {}} className={`${buttonStyle} group`}>
           <AiImportIconWithAnimation />
         </button>
-        <button onClick={() => {}} className={buttonStyle}>
+        {/*<button onClick={() => {}} className={buttonStyle}>
           <ClearIcon />
-        </button>
+        </button>*/}
       </div>
 
       {/* input fichier masqué */}

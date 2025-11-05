@@ -136,7 +136,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       {/* Header */}
       <div className="flex items-center p-4 dark:border-gray-700 bg-[#20282E] gap-3">
         <SettingsButton onClick={() => setIsSettingsOpen(true)} />
-        <BDActionsButtons/>
+        <BDActionsButtons onQuerySuccess={onQuerySuccess} />
 
         <div className="flex-grow flex justify-end">
           <div

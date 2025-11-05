@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import toast from 'react-hot-toast'
 
 const ExportIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -33,8 +34,6 @@ const ClearIcon = () => (
   </svg>
 );
 
-// --- Helpers sûrs pour labels/props/clé & sérialisation ---
-
 const INTERNAL_KEYS = new Set(['_id', '_label', '_src', '_dst']);
 
 function pickLabel(x) {
@@ -50,8 +49,8 @@ function sanitizeProps(x) {
   const out = {};
   if (!x || typeof x !== 'object') return out;
   for (const [k, v] of Object.entries(x)) {
-    if (INTERNAL_KEYS.has(k)) continue;          // ignore champs internes
-    if (v === null || v === undefined) continue; // pas de NULL/undefined
+    if (INTERNAL_KEYS.has(k)) continue;
+    if (v === null || v === undefined) continue;
     const t = typeof v;
     if (t === 'string' || t === 'number' || t === 'boolean') { out[k] = v; continue; }
     if (Array.isArray(v)) {
@@ -59,12 +58,10 @@ function sanitizeProps(x) {
       out[k] = arr;
       continue;
     }
-    // objets imbriqués -> ignorés (Kùzu n'aime pas dans les maps)
   }
   return out;
 }
 
-// renvoie une clé "simple" pour MATCH : { propName, propValue }, ou null si rien d'exploitable
 function pickMatchKey(cleanProps) {
   if (cleanProps == null) return null;
   if (cleanProps.id !== undefined && cleanProps.id !== null && (typeof cleanProps.id === 'string' || typeof cleanProps.id === 'number'))
@@ -96,13 +93,9 @@ function toCypherMap(obj) {
   return `{ ${entries.join(', ')} }`;
 }
 
-
-/* ===================== Composant ===================== */
-
-const BDActionsButtons = () => {
+const BDActionsButtons = ({ onQuerySuccess }) => {
   const buttonStyle = "p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-r border-[#2A3239] last:border-r-0";
 
-  // --- EXPORT (dump) inchangé ---
   const handleExport = async () => {
     try {
       const nodesRes = await fetch('/api', {
@@ -137,25 +130,24 @@ const BDActionsButtons = () => {
     }
   };
 
-  // --- IMPORT (depuis fichier) avec nettoyage ---
   const fileInputRef = useRef(null);
 
   const handleClickImport = () => {
     fileInputRef.current && fileInputRef.current.click();
   };
 
-  // --- Remplacement direct de ta fonction ---
   const handleImportFromFile = async (ev) => {
     try {
       const file = ev.target.files && ev.target.files[0];
       if (!file) return;
+
+      toast.loading('Import en cours...')
 
       const text = await file.text();
       const dump = JSON.parse(text);
       const nodes = Array.isArray(dump?.nodes) ? dump.nodes : [];
       const edges = Array.isArray(dump?.edges) ? dump.edges : [];
 
-      // 1) CREATE tous les nœuds
       for (const n of nodes) {
         const label = pickLabel(n.n);
         const clean = sanitizeProps(n.n);
@@ -171,18 +163,17 @@ const BDActionsButtons = () => {
         });
         if (!res.ok) {
           const t = await res.text().catch(() => '');
-          console.warn('CREATE node failed', { label, clean }, t);
+          console.log('CREATE node failed', { label, clean }, t);
         }
       }
 
-      // 2) MATCH...CREATE pour chaque arête
       for (const e of edges) {
         const a = e?.a, r = e?.r, b = e?.b;
         if (!a || !b || !r) continue;
 
         const aLabel = pickLabel(a);
         const bLabel = pickLabel(b);
-        const rType  = pickLabel(r); // pickRelType équiv.; on réutilise pickLabel pour _label/type/label
+        const rType  = pickLabel(r);
 
         const aClean = sanitizeProps(a);
         const bClean = sanitizeProps(b);
@@ -191,7 +182,7 @@ const BDActionsButtons = () => {
         const aKey = pickMatchKey(aClean);
         const bKey = pickMatchKey(bClean);
         if (!aKey || !bKey) {
-          console.warn('Skip edge: no simple key to MATCH', { aLabel, bLabel, aClean, bClean });
+          toest.error('Skip edge: no simple key to MATCH', { aLabel, bLabel, aClean, bClean });
           continue;
         }
 
@@ -212,10 +203,24 @@ const BDActionsButtons = () => {
         }
       }
 
-      alert('Import Kùzu terminé ✅ (CREATE nodes + MATCH/CREATE edges)');
+      try {
+        const response = await fetch('/api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: "MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m" }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          onQuerySuccess(data.result, "MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m");
+        }
+      } catch (err) {
+        console.log(err)
+      }
+
+      toast.success('Importation terminé !')
       if (ev.target) ev.target.value = '';
     } catch (err) {
-      console.error('Import failed:', err);
+      toest.error('Import failed:', err);
       alert('Échec import Kùzu. Voir console.');
     }
   };

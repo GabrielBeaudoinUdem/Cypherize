@@ -15,6 +15,7 @@ const GraphView = ({ data, onElementClick }) => {
       width: containerRef.current.scrollWidth,
       height: containerRef.current.scrollHeight,
       fitView: true,
+      behaviors: ['drag-canvas'],
       modes: {
         default: ['drag-canvas', 'zoom-canvas', 'drag-node', 'drag-edge']
       },

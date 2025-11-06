@@ -16,7 +16,7 @@ const ImportIcon = () => (
 );
 
 const AiImportIconWithAnimation = () => {
-  const starClasses = "fill-current text-gray-800 dark:text-gray-300 transition-colors duration-300 ease-in-out group-hover:text-[#34B27B]";
+  const starClasses = "fill-current text-gray-300 transition-colors duration-300 ease-in-out group-hover:text-[#34B27B]";
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
       <path className={starClasses} d="M7 3 L7.5 5 L9.5 5.5 L7.5 6 L7 8 L6.5 6 L4.5 5.5 L6.5 5 Z" />
@@ -94,7 +94,7 @@ function toCypherMap(obj) {
 }
 
 const BDActionsButtons = ({ onQuerySuccess }) => {
-  const buttonStyle = "p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-r border-[#2A3239] last:border-r-0";
+  const buttonStyle = "p-2 text-gray-300 hover:bg-gray-800 transition-colors border-r border-[#2A3239] last:border-r-0";
 
   const handleExport = async () => {
     try {

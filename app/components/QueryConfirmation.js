@@ -13,7 +13,7 @@ const QueryConfirmation = ({ query, onConfirm, onCancel }) => {
 
   return (
     <div className="bg-[#252F36] rounded-sm p-2 my-2 border-l-4 border-[#34B27B]">
-      <h4 className="font-semibold text-sm text-gray-800 dark:text-gray-200 mb-2">Confirmation requise</h4>
+      <h4 className="font-semibold text-sm text-gray-200 mb-2">Confirmation requise</h4>
       <SyntaxHighlighter
         language="cypher"
         style={tomorrow}

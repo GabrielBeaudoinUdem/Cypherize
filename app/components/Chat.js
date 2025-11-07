@@ -142,8 +142,8 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
   function transformMentions(msg) {
     return msg
-      .replace(/@\[(.*?)\]\((.*?)\)/g, '<span style="background:rgba(52, 178, 123, .8);color:#0B1215;padding:0px 3px;">@$1</span>')
-      .replace(/#\[(.*?)\]\((.*?)\)/g, '<span style="background:rgba(52, 178, 123, .8);color:#0B1215;padding:0px 3px;">#$1</span>');
+      .replace(/@\[(.*?)\]\((.*?)\)/g, '<span style="color:rgba(52, 178, 123, 1);font-weight:bold;">@$1</span>')
+      .replace(/#\[(.*?)\]\((.*?)\)/g, '<span style="color:rgba(52, 178, 123, 1);font-weight:bold;">#$1</span>');
   }
 
   return (

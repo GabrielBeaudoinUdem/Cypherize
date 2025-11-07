@@ -3,9 +3,10 @@
 import React, { useEffect, useRef } from 'react';
 import * as G6 from '@antv/g6';
 
-const GraphView = ({ data, onElementClick, onDragStart, onDragEnd }) => {
+const GraphView = ({ data, onElementClick, onDragStart, onDragEnd, onDragMove }) => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
+  const winMoveRef = useRef(null);
 
   useEffect(() => {
     if (graphRef.current) return;
@@ -56,6 +57,22 @@ const GraphView = ({ data, onElementClick, onDragStart, onDragEnd }) => {
       onElementClick(element);
     };
 
+    const addGlobalMove = () => {
+      if (winMoveRef.current) return;
+      winMoveRef.current = (ev) => {
+        onDragMove?.({ x: ev.clientX, y:  ev.clientY });
+      };
+      window.addEventListener('pointermove', winMoveRef.current, { passive: true });
+      window.addEventListener('mousemove', winMoveRef.current, { passive: true }); // fallback
+    };
+
+    const removeGlobalMove = () => {
+      if (!winMoveRef.current) return;
+      window.removeEventListener('pointermove', winMoveRef.current);
+      window.removeEventListener('mousemove', winMoveRef.current);
+      winMoveRef.current = null;
+    };
+
     graphRef.current.on('node:click', handleNodeClick);
     graphRef.current.on('edge:click', handleEdgeClick);
     graphRef.current.on('node:dragstart', (e) => {
@@ -63,13 +80,18 @@ const GraphView = ({ data, onElementClick, onDragStart, onDragEnd }) => {
       const label = e.target?.attributes?.labelText;
       if (onDragStart) {
         onDragStart({ id, label });
+        addGlobalMove()
       }
     });
 
     graphRef.current.on('node:dragend', (e) => {
       if (onDragEnd) {
         onDragEnd(e);
+        removeGlobalMove()
       }
+    });
+    graphRef.current.on('node:drag', (e) => {
+      onDragMove?.({ x: e.page.x, y:  e.page.y });
     });
 
 

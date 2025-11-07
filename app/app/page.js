@@ -55,14 +55,14 @@ export default function Home() {
     url: "http://localhost:1234/v1/chat/completions",
     model: "mistralai/devstral-small-2507",
   });
-
+  const [ghost, setGhost] = useState({ visible: false, x: 0, y: 0, kind: null, label: '' });
   const dragRef = useRef(null);
   const [dragPayload, setDragPayload] = useState(null);
 
   const handleGraphDragStart = ({ id, label }) => {
     dragRef.current = { id, label };
     document.body.classList.add('cursor-grabbing');
-    console.log("okkk")
+    setGhost({ visible: true, x: 0, y: 0, label: label || id });
   };
 
   const handleGraphDragEnd = (e) => {
@@ -86,12 +86,12 @@ export default function Home() {
       clientY <= rect.bottom;
 
     if (inside) {
-      // 👇 Ajoute le texte dans le champ
       const token = `@[${payload.label}](${payload.id})`;
       setChatInput(prev => (prev ? `${prev} ${token}` : token));
     }
 
     dragRef.current = null;
+    setGhost(g => ({ ...g, visible: false }));
   };
 
 
@@ -151,6 +151,10 @@ export default function Home() {
     }
   };
 
+  const handleGraphDragMove = ({ x, y }) => {
+    setGhost(g => g.visible ? { ...g, x, y } : g);
+  };
+
   const handleDeleteElement = async (deleteQuery) => {
     try {
       await executeQuery(deleteQuery);
@@ -179,6 +183,22 @@ export default function Home() {
 
   return (
     <main className="h-screen w-screen text-black dark:text-white bg-[#11181C]">
+      {ghost.visible && (
+        <div
+          className="fixed z-[9999] pointer-events-none select-none"
+          style={{
+            left: ghost.x,
+            top: ghost.y,
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <div className="flex items-center gap-2 px-2 py-1 rounded-md border border-[#2A3239] bg-[#1A2127] text-white text-xs shadow-lg">
+            <span className={`inline-block w-2 h-2 rounded-full ${ghost.kind === 'node' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+            <span>{ghost.kind === 'node' ? '@' : '#'}{ghost.label}</span>
+          </div>
+        </div>
+      )}
+
       <Allotment>
         <Allotment.Pane
           visible={!!selectedElement}
@@ -199,7 +219,13 @@ export default function Home() {
         </Allotment.Pane>
 
         <Allotment.Pane minSize={300}>
-          <GraphView data={graphData} onElementClick={handleElementClick} onDragStart={handleGraphDragStart} onDragEnd={handleGraphDragEnd} />
+          <GraphView
+            data={graphData}
+            onElementClick={handleElementClick}
+            onDragMove={handleGraphDragMove}
+            onDragStart={handleGraphDragStart}
+            onDragEnd={handleGraphDragEnd}
+          />
         </Allotment.Pane>
 
         <Allotment.Pane

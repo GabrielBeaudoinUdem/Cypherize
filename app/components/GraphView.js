@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as G6 from '@antv/g6';
 
-const GraphView = ({ data, onElementClick }) => {
+const GraphView = ({ data, onElementClick, onDragStart, onDragEnd }) => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
 
@@ -58,6 +58,20 @@ const GraphView = ({ data, onElementClick }) => {
 
     graphRef.current.on('node:click', handleNodeClick);
     graphRef.current.on('edge:click', handleEdgeClick);
+    graphRef.current.on('node:dragstart', (e) => {
+      const id = e.target?.id;
+      const label = e.target?.attributes?.labelText;
+      if (onDragStart) {
+        onDragStart({ id, label });
+      }
+    });
+
+    graphRef.current.on('node:dragend', (e) => {
+      if (onDragEnd) {
+        onDragEnd(e);
+      }
+    });
+
 
     graphRef.current.setData(data);
     graphRef.current.render();

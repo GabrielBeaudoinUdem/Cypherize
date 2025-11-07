@@ -2,15 +2,19 @@
 
 import React from 'react';
 import { MentionsInput, Mention } from 'react-mentions';
+import { useState } from "react";
 
 export default function MentionTextarea({
   value,
   onChange,
   placeholder,
   disabled,
-  mode = 'ai',
-  users = [],
+  mode = 'ai'
 }) {
+
+  const [result, setResult] = useState(null);
+
+
   // Styles react-mentions pour reproduire le design Tailwind du <textarea>
   const styles = {
     control: {
@@ -63,21 +67,40 @@ export default function MentionTextarea({
   // Données de suggestions minimales :
   //  - 1) l'entrée "libre" (= le texte tapé après @)
   //  - 2) (optionnel) vos users passés en props
-  const dataProvider = async (query, callback) => {
-    const q = (query || '').trim();
-    const out = [];
 
-    if (users && users.length) {
-      const lower = q.toLowerCase();
-      const matches = users
-        .filter(u => !q || u.name.toLowerCase().includes(lower) || (u.handle || '').toLowerCase().includes(lower))
-        .slice(0, 8)
-        .map(u => ({ id: u.id, display: u.name }));
-      out.push(...matches);
-    }
+    const dataProvider = async (query, callback) => {
+        const q = (query || '').trim();
+        const lower = q.toLowerCase();
+        const out = [];
 
-    callback(out);
-  };
+        if (!result) {
+            const res = await fetch('/api/schema', { method: 'GET', headers: { Accept: 'application/json' } });
+            if (!res.ok) throw new Error('Schema loading errors');
+            const data = await res.json();
+            const schema = data?.result ?? data;
+            setResult(schema);
+        }
+
+        const schema = result ?? {};
+
+        const nodeNames = (schema.nodeTables ?? [])
+            .map(t => t?.name)
+            .filter(Boolean)
+            .filter(name => !q || name.toLowerCase().includes(lower))
+            .map(name => ({ id: `node:${name}`, display: name }));
+
+        const relNames = (schema.relTables ?? [])
+            .map(t => t?.name)
+            .filter(Boolean)
+            .filter(name => !q || name.toLowerCase().includes(lower))
+            .map(name => ({ id: `rel:${name}`, display: name }));
+
+        out.push(...nodeNames.slice(0, 8));
+        if (out.length < 8) out.push(...relNames.slice(0, 8 - out.length));
+
+        callback(out);
+    };
+
 
   return (
     <div className="relative w-full">
@@ -92,29 +115,37 @@ export default function MentionTextarea({
         className={`flex-1 bg-transparent placeholder:text-zinc-500 max-h-48`}
         allowSuggestionsAboveCursor={true}
         >
-        <Mention
-            trigger="@"
-            data={dataProvider}
-            appendSpaceOnAdd
-            displayTransform={(id, display) => `@${display}`}
-            markup="@[__display__](__id__)"
-            style={{backgroundColor:'rgba(52, 178, 123, 0.3)',color: 'transparent',borderRadius: 3}}
-            renderSuggestion={(entry, _search, highlighted) => (
-                <div className="flex flex-col-reverse gap-2">
-                    <div className="flex gap-2">
-                        <div className="h-6 w-6 rounded-full bg-[#34B27B] flex items-center justify-center text-xs">
-                            {String(entry.display || '').slice(0, 1).toUpperCase()}
-                        </div>
-                        <div className="flex flex-col leading-5">
-                            <span
-                            className="text-sm"
-                            dangerouslySetInnerHTML={{ __html: entry.display }}
-                            />
+            <Mention
+                trigger="@"
+                appendSpaceOnAdd
+                displayTransform={(id, display) => `@${display}`}
+                markup="@[__display__](__id__)"
+                style={{backgroundColor:'rgba(52, 178, 123, 0.3)',color: 'transparent',borderRadius: 3}}
+            />
+
+                <Mention
+                trigger="#"
+                data={dataProvider}
+                appendSpaceOnAdd
+                displayTransform={(id, display) => `#${display}`}
+                markup="#[__display__](__id__)"
+                style={{backgroundColor:'rgba(52, 178, 123, 0.3)',color: 'transparent',borderRadius: 3}}
+                renderSuggestion={(entry, _search, highlighted) => (
+                    <div className="flex flex-col-reverse gap-2">
+                        <div className="flex gap-2">
+                            <div className="h-6 w-6 rounded-full bg-[#34B27B] flex items-center justify-center text-xs">
+                                #
+                            </div>
+                            <div className="flex flex-col leading-5">
+                                <span
+                                className="text-sm"
+                                dangerouslySetInnerHTML={{ __html: entry.display }}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        />
+                )}
+            />
         </MentionsInput>
 
     </div>

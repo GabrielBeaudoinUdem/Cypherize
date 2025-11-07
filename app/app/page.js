@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import dynamic from 'next/dynamic';
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
@@ -55,6 +55,45 @@ export default function Home() {
     url: "http://localhost:1234/v1/chat/completions",
     model: "mistralai/devstral-small-2507",
   });
+
+  const dragRef = useRef(null);
+  const [dragPayload, setDragPayload] = useState(null);
+
+  const handleGraphDragStart = ({ id, label }) => {
+    dragRef.current = { id, label };
+    document.body.classList.add('cursor-grabbing');
+    console.log("okkk")
+  };
+
+  const handleGraphDragEnd = (e) => {
+    document.body.classList.remove('cursor-grabbing');
+    const payload = dragRef.current;
+    if (!payload) return;
+
+    const clientX = e.client.x;
+    const clientY = e.client.y;
+
+    // Récupère la zone du textarea (le composant MentionTextarea)
+    const target = document.getElementById('mention-textarea-zone');
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+
+    // Vérifie si le curseur est au-dessus
+    const inside =
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom;
+
+    if (inside) {
+      // 👇 Ajoute le texte dans le champ
+      const token = `@[${payload.label}](${payload.id})`;
+      setChatInput(prev => (prev ? `${prev} ${token}` : token));
+    }
+
+    dragRef.current = null;
+  };
+
 
   const executeQuery = async (query) => {
     try {
@@ -160,7 +199,7 @@ export default function Home() {
         </Allotment.Pane>
 
         <Allotment.Pane minSize={300}>
-          <GraphView data={graphData} onElementClick={handleElementClick} />
+          <GraphView data={graphData} onElementClick={handleElementClick} onDragStart={handleGraphDragStart} onDragEnd={handleGraphDragEnd} />
         </Allotment.Pane>
 
         <Allotment.Pane

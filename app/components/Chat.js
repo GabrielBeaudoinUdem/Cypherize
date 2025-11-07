@@ -11,12 +11,6 @@ import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { looksLikeCypher } from '@/lib/looksLikeCypher';
 import MentionTextarea from './MentionTextarea';
 
-const users = [
-    { id: '1', name: 'Théotime Flichy', handle: '@theotime' },
-    { id: '2', name: 'Gabriel Beaudoin', handle: '@gabriel' },
-    { id: '3', name: 'Claire', handle: '@claire' },
-  ];
-
 const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
   const [messages, setMessages] = useState([]); // { id, sender, type, content }
@@ -145,6 +139,12 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       setMessages(prev => prev.filter(m => m.id !== messageId));
       addMessage('bot', 'text', 'Opération annulée.');
   };
+
+  function transformMentions(msg) {
+    return msg
+      .replace(/@\[(.*?)\]\((.*?)\)/g, '<span style="background:rgba(52, 178, 123, .8);color:#0B1215;padding:0px 3px;">@$1</span>')
+      .replace(/#\[(.*?)\]\((.*?)\)/g, '<span style="background:rgba(52, 178, 123, .8);color:#0B1215;padding:0px 3px;">#$1</span>');
+  }
 
   return (
     <div className="relative flex flex-col h-full rounded-none bg-[#171717] [border-left:#2A2A2A_1px_solid]">
@@ -289,8 +289,19 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
           {messages.map((msg) => (
             <div key={msg.id} className={`flex mb-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.type === 'ai' && (
-                <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-4 py-2 rounded-2xl' : 'text-white'}`}>
-                  <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
+                <div
+                  className={`max-w-[80%] ${
+                    msg.sender === 'user'
+                      ? 'bg-[#252F36] text-white px-4 py-2 rounded-2xl'
+                      : 'text-white'
+                  }`}
+                >
+                  <div
+                    className="whitespace-pre-wrap font-sans text-sm"
+                    dangerouslySetInnerHTML={{
+                      __html: transformMentions(msg.content),
+                    }}
+                  />
                 </div>
               )}
 
@@ -362,9 +373,28 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               )}
               {msg.type === 'confirmation' && msg.content.confirmed && (
                   <div className="w-full my-2">
-                      <div className="bg-gray-700 rounded-lg p-4 border-l-4 border-green-500 opacity-70">
-                          <p className="text-sm italic text-gray-300">Requête exécutée :</p>
-                          <pre className="mt-2 bg-gray-900 text-white p-2 rounded-md text-xs font-mono whitespace-pre-wrap"><code>{msg.content.query}</code></pre>
+                      <div className="bg-[#252F36] rounded-sm p-2 my-2 border-l-4 border-[#34B27B]">
+                          <SyntaxHighlighter
+                            language="cypher"
+                            style={tomorrow}
+                            wrapLongLines
+                            PreTag="div"
+                            customStyle={{
+                              background: "#11181C",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              fontFamily: "monospace",
+                              padding: "12px",
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              overflow: "hidden",
+                            }}
+                            codeTagProps={{
+                              style: { whiteSpace: "pre-wrap", wordBreak: "break-word" },
+                            }}
+                          >
+                            {msg.content.query}
+                          </SyntaxHighlighter>
                       </div>
                   </div>
               )}
@@ -387,7 +417,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
       {/* Zone de saisie */}
       <div className="flex-shrink-0 px-4 [background-color:#1A2127]">
-        <form onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
+        <form id="mention-textarea-zone" onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
           <div className="flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl bg-[#20282E] border border-zinc-700/70 pl-4 pr-1 py-1 transition-colors">
             {/*<textarea
               value={input}
@@ -400,7 +430,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               <MentionTextarea
                 value={input}
                 onChange={setInput}
-                users={users}
                 placeholder="Posez une question..."
                 disabled={false}
                 mode="ai"

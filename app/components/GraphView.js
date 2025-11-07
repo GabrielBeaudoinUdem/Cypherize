@@ -15,7 +15,7 @@ const GraphView = ({ data, onElementClick }) => {
       width: containerRef.current.scrollWidth,
       height: containerRef.current.scrollHeight,
       fitView: true,
-      behaviors: ['drag-canvas'],
+      behaviors: ['drag-canvas', 'zoom-canvas', 'drag-node', 'drag-edge'],
       modes: {
         default: ['drag-canvas', 'zoom-canvas', 'drag-node', 'drag-edge']
       },
@@ -25,6 +25,19 @@ const GraphView = ({ data, onElementClick }) => {
         labelCfg: { autoRotate: true, style: { fill: '#fff', background: { fill: '#5f5f5f', padding: [2, 5], radius: 2 } } },
         style: { lineWidth: 3 }
       },
+      plugins: [{
+        type: 'grid-line',
+        key: 'bg-dots',
+        follow: true,
+        size: 20,                  // espacement entre points
+        lineDash: [0, 20],         // fait apparaître des points plutôt que des lignes
+        stroke: '#11181C',         // couleur des points
+        lineWidth: 18,              // épaisseur du point
+        opacity: 0.6,
+        zIndex: -1,
+        borderStroke: '#11181C', // Blue border
+        borderLineWidth: 0,
+      }],
     });
 
     const handleNodeClick = (evt) => {
@@ -69,7 +82,7 @@ const GraphView = ({ data, onElementClick }) => {
     }
   }, [data]);
 
-  return <div ref={containerRef} className="h-full w-full bg-[#11181C]" />;
+  return <div ref={containerRef} className="h-full w-full bg-[#2a2f33]" />;
 };
 
 export default GraphView;

@@ -8,16 +8,32 @@ import BDActionsButtons from './BDActionsButtons';
 import { CheckCircle, AlertCircle  } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { looksLikeCypher } from '@/lib/looksLikeCypher';
 
 const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
   const [messages, setMessages] = useState([]); // { id, sender, type, content }
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [inputWarning, setInputWarning] = useState(0);
   const messagesEndRef = useRef(null);
 
   const input = externalInput;
   const setInput = setExternalInput;
+
+  useEffect(() => {
+    if (input.length > 0) {
+      if (mode === 'ai' && looksLikeCypher(input)) {
+        setInputWarning(1)
+      } else if (mode === 'code' && input.length > 5 && !looksLikeCypher(input)) {
+        setInputWarning(2)
+      } else {
+        setInputWarning(0)
+      }
+    } else {
+      setInputWarning(0)
+    }
+  }, [input])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -207,37 +223,52 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
               {/* Titre + sous-titre */}
               <h3 className="text-white font-semibold tracking-tight">
-                Bienvenue dans <span className="text-[#34B27B]">Cypherize</span>
+                Welcome to <span className="text-[#34B27B]">Cypherize</span>
               </h3>
               <p className="mt-1 text-sm">
-                Posez une question en langage naturel ou écrivez une requête <span className="font-mono text-[#34B27B]">Cypher</span>.
+                Ask a question in natural language or write a <span className="font-mono text-[#34B27B]">Cypher</span> query.
               </p>
 
+
               {/* Suggestions */}
-              {/*
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Trouve les 10 nœuds les plus connectés')}
+                  onClick={() => {
+                    if (typeof setExternalInput === 'function') {
+                      setMode('ai');
+                      setExternalInput('How many nodes does this graph have ?');
+                    }
+                  }}
                   className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
                 >
-                  Top nœuds connectés
+                  Number of nodes
                 </button>
                 <button
                   type="button"
-                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Chemin le plus court entre A et B')}
+                  onClick={() => {
+                    if (typeof setExternalInput === 'function') {
+                      setMode('ai');
+                      setExternalInput('How many edges does this graph have ?');
+                    }
+                  }}
                   className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
                 >
-                  Chemin le plus court
+                  Number of edges
                 </button>
                 <button
                   type="button"
-                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Communautés avec densité > 0.6')}
+                  onClick={() => {
+                    if (typeof setExternalInput === 'function') {
+                      setMode('code');
+                      setExternalInput('MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m');
+                    }
+                  }}
                   className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
                 >
-                  Communautés denses
+                  Show full graph
                 </button>
-              </div>*/}
+              </div>
 
               {/* Aide clavier */}
               {/*<div className="mt-4 text-[11px] text-zinc-500">
@@ -348,7 +379,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
     </div>
 
       {/* Zone de saisie */}
-      <div className="flex-shrink-0 px-4 py-3 [background-color:#1A2127]">
+      <div className="flex-shrink-0 px-4 [background-color:#1A2127]">
         <form onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
           <div className="flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl bg-[#20282E] border border-zinc-700/70 pl-4 pr-1 py-1 transition-colors">
             <textarea
@@ -381,6 +412,34 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
             </button>
           </div>
         </form>
+
+        <div className="px-4 my-1 text-[11px] text-zinc-400/50 text-center">
+              {(inputWarning == 0) && ( <>Cypherize can make mistakes. Please check answers.</> )}
+
+              { (inputWarning == 1) && (
+                <>
+                  That looks like Cypher...
+                  <span
+                    className="text-[#34B27B] pl-1 opacity-80 hover:opacity-100 cursor-default duration-100"
+                    onClick={() => { setMode('code'); setInputWarning(0); }}
+                  >
+                    Switch mode ?
+                  </span>
+                </>
+              ) }
+
+              { (inputWarning == 2) && (
+                <>
+                  That doesn't look like Cypher...
+                  <span
+                    className="text-[#34B27B] pl-1 opacity-80 hover:opacity-100 cursor-default duration-100"
+                    onClick={() => { setMode('ai'); setInputWarning(0); }}
+                  >
+                    Switch mode ?
+                  </span>
+                </>
+              ) }
+        </div>
       </div>
     </div>
   );

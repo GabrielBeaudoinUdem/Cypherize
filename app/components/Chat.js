@@ -9,6 +9,13 @@ import { CheckCircle, AlertCircle  } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { looksLikeCypher } from '@/lib/looksLikeCypher';
+import MentionTextarea from './MentionTextarea';
+
+const users = [
+    { id: '1', name: 'Théotime Flichy', handle: '@theotime' },
+    { id: '2', name: 'Gabriel Beaudoin', handle: '@gabriel' },
+    { id: '3', name: 'Claire', handle: '@claire' },
+  ];
 
 const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
@@ -382,14 +389,22 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       <div className="flex-shrink-0 px-4 [background-color:#1A2127]">
         <form onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
           <div className="flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl bg-[#20282E] border border-zinc-700/70 pl-4 pr-1 py-1 transition-colors">
-            <textarea
+            {/*<textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={mode === "ai" ? "Posez une question..." : "Entrez une requête Cypher..."}
               rows={1}
               className="flex-1 resize-none outline-none bg-transparent text-[15px] leading-6 placeholder:text-zinc-500 text-zinc-100 max-h-48 py-1.5"
               disabled={isLoading}
-            />
+            />*/}
+              <MentionTextarea
+                value={input}
+                onChange={setInput}
+                users={users}
+                placeholder="Posez une question..."
+                disabled={false}
+                mode="ai"
+              />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
@@ -413,7 +428,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
           </div>
         </form>
 
-        <div className="px-4 my-1 text-[11px] text-zinc-400/50 text-center">
+        <div className="my-1 text-[11px] text-zinc-400/50 text-center">
               {(inputWarning == 0) && ( <>Cypherize can make mistakes. Please check answers.</> )}
 
               { (inputWarning == 1) && (

@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --focus-border: #34B27B!important;
+  --separator-border: #34B27B;
+}
+
+.mentions__suggestions {
+  max-height: calc(100vh - 200px); /* garde 200px de marge bas */
+  overflow-y: auto;
 }
 
 @theme inline {

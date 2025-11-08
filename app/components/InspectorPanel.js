@@ -161,7 +161,7 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
   if (properties.length === 0 && element.data.properties && Object.keys(element.data.properties).length > 0) {
       return (
         <div className="flex flex-col h-full [background-color:#1A2127] [border-left:#2A2A2A_1px_solid] p-4 shadow-lg text-white">
-          <div className="flex justify-center items-center h-full"><p className="text-gray-400">Chargement des détails...</p></div>
+          <div className="flex justify-center items-center h-full"><p className="text-gray-400">Loading details...</p></div>
         </div>
       );
   }
@@ -185,7 +185,7 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
           <label className="block text-sm font-medium text-gray-400">Label</label>
           <p className="p-2 bg-[#252F36] rounded-sm text-xs mt-1 text-gray-300">{data.label_type}</p>
         </div>
-        <h4 className="font-semibold pt-2 border-t border-gray-700 text-gray-200">Propriétés</h4>
+        <h4 className="font-semibold pt-2 border-t border-gray-700 text-gray-200">Properties</h4>
         
         {properties.map(prop => {
           const { key, value, type, isPK, originalValue } = prop;
@@ -223,8 +223,8 @@ const InspectorPanel = ({ element, onClose, onSaveChanges, onDeleteElement }) =>
       </div>
 
       <div className="pt-4 mt-2 border-t border-gray-700 space-y-3">
-         <button onClick={handleSave} disabled={!hasChanges || !primaryKey || hasValidationErrors} className={`w-full transition-all duration-300 font-semibold text-white rounded-sm text-sm py-2.5 ${(hasChanges && primaryKey && !hasValidationErrors) ? 'bg-[#34B27B] hover:bg-green-500' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}>Sauvegarder</button>
-         <button onClick={handleDelete} disabled={!primaryKey} className={`w-full bg-[#E45858] hover:bg-red-500 text-white font-semibold rounded-sm text-sm py-2.5 transition-colors ${!primaryKey ? 'opacity-50 cursor-not-allowed' : ''}`}>Supprimer</button>
+         <button onClick={handleSave} disabled={!hasChanges || !primaryKey || hasValidationErrors} className={`w-full transition-all duration-300 font-semibold text-white rounded-sm text-sm py-2.5 ${(hasChanges && primaryKey && !hasValidationErrors) ? 'bg-[#34B27B] hover:bg-green-500' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}>Save</button>
+         <button onClick={handleDelete} disabled={!primaryKey} className={`w-full bg-[#E45858] hover:bg-red-500 text-white font-semibold rounded-sm text-sm py-2.5 transition-colors ${!primaryKey ? 'opacity-50 cursor-not-allowed' : ''}`}>Delete</button>
       </div>
     </div>
   );

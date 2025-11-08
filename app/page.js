@@ -21,16 +21,17 @@ export default function Home() {
             <span className="font-semibold tracking-wide">Cypherize<span className="text-[#34B27B]">.</span></span>
           </Link>
           <nav className="hidden sm:flex items-center gap-6 text-sm text-zinc-300">
-            <a href="#features" className="hover:text-white">Fonctionnalités</a>
-            <a href="#how" className="hover:text-white">Comment ça marche</a>
-            <a href="/app" className="hover:text-white">Démo</a>
+            <a href="#features" className="hover:text-white">Features</a>
+            <a href="#how" className="hover:text-white">How it works</a>
+            <Link href="/doc" className="hover:text-white">Documentation</Link>
+            <Link href="/app" className="hover:text-white">Demo</Link>
           </nav>
           <div className="flex items-center gap-2">
             <Link
               href="/app"
               className="px-4.5 py-1.5 rounded-3xl bg-[#34B27B] text-[#0B1215] font-semibold hover:opacity-90"
             >
-              Découvrir
+              Explore
             </Link>
           </div>
         </div>
@@ -46,12 +47,12 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
           <div className="max-w-2xl">
             <h1 className="text-4xl sm:text-5xl font-semibold leading-tight tracking-tight">
-              LLM pour <span className="text-[#34B27B]">interagir</span> avec votre graphe,
-              en <span className="text-[#34B27B]">Cypher</span>.
+              LLM for <span className="text-[#34B27B]">interacting</span> with your graph
+              in <span className="text-[#34B27B]">Cypher</span>.
             </h1>
             <p className="mt-4 text-zinc-300">
-              Posez des questions en langage naturel, obtenez des requêtes Cypher optimisées
-              et des visualisations prêtes à l’emploi pour Kuzu.
+              Ask questions in natural language and get precise, executable Cypher queries
+              tailored to your graph database schema.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -59,18 +60,14 @@ export default function Home() {
                 href="/app"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-[#34B27B] text-[#0B1215] font-semibold hover:opacity-90"
               >
-                Lancer la démo
+                Start Demo
               </a>
               <a
                 href="#features"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-[#2A3239] bg-[#1A2127] text-white hover:bg-[#20282E]"
               >
-                Voir les fonctionnalités
+                See Features
               </a>
-            </div>
-
-            <div className="mt-6 text-xs text-zinc-400">
-              Compatible Neo4j • Cypher auto-généré
             </div>
           </div>
 
@@ -83,7 +80,7 @@ export default function Home() {
               <span className="ml-3">/demo/query.cypher</span>
             </div>
             <pre className="px-4 py-3 text-sm leading-7 whitespace-pre-wrap text-zinc-200">
-              {`// Question: "Quelles sont les communautés les plus connectées ?"
+              {`// Question: "Which communities are the most connected ?"
               MATCH (c:Community)-[r:LINKS]->(c2:Community)
               WITH c, count(r) AS deg
               RETURN c.name AS community, deg
@@ -97,17 +94,16 @@ export default function Home() {
       {/* Features */}
       <section id="features" className="border-t border-[#2A3239] bg-[#0F1519]">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold">Pourquoi Cypherize</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold">Why Cypherize</h2>
           <p className="mt-2 text-zinc-400 max-w-2xl">
-            Accélérez l’exploration des graphes, standardisez vos requêtes et réduisez les aller-retour
-            entre data, produit et expertise graph.
+            Accelerate graph analysis.
           </p>
 
           <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { t: "NL ➜ Cypher", d: "Du langage naturel vers des requêtes Cypher propres, typées et commentées." },
-              { t: "RAG Schéma", d: "Indexe votre schéma et vos best practices pour des requêtes fidèles au contexte." },
-              { t: "Visualisation", d: "Résultats au format compatible viz (JSON, GraphSON) et presets de styles." },
+            { t: "NL ➜ Cypher", d: "Turn natural language into precise, optimized Cypher queries." },
+            { t: "Schema Grounded", d: "Leverage your actual schema and data to generate contextually accurate queries." },
+            { t: "Visualization", d: "Explore and understand results through interactive, intuitive visualizations." },
             ].map((f) => (
               <div key={f.t} className="rounded-xl border border-[#2A3239] bg-[#1A2127] p-4">
                 <div className="text-[#34B27B] font-semibold">{f.t}</div>
@@ -121,27 +117,27 @@ export default function Home() {
       {/* How it works */}
       <section id="how" className="border-t border-[#2A3239]">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold">Comment ça marche</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold">How It Works</h2>
           <div className="mt-8 grid lg:grid-cols-3 gap-6">
             <div className="rounded-xl border border-[#2A3239] bg-[#1A2127] p-5">
-              <div className="text-zinc-400 text-sm">Étape 1</div>
-              <div className="mt-1 font-semibold">Décrivez votre question</div>
+              <div className="text-zinc-400 text-sm">Step 1</div>
+              <div className="mt-1 font-semibold">Ask in Natural Language</div>
               <p className="mt-2 text-zinc-300 text-sm">
-                “Trouve les nœuds hubs entre A et B”, “Top communautés par densité”, etc.
+                Start by typing a question in plain English, like "Find the most connected movies" or "Show me all actors born after 1980." You can even drag-and-drop nodes from the graph to provide specific context.
               </p>
             </div>
             <div className="rounded-xl border border-[#2A3239] bg-[#1A2127] p-5">
-              <div className="text-zinc-400 text-sm">Étape 2</div>
-              <div className="mt-1 font-semibold">Cypher est généré & validé</div>
+              <div className="text-zinc-400 text-sm">Step 2</div>
+              <div className="mt-1 font-semibold">AI Generates the Cypher Query</div>
               <p className="mt-2 text-zinc-300 text-sm">
-                RAG sur votre schéma, contraintes & exemples. Propositions d’optimisation.
+                Your request is sent to an LLM, augmented with the real-time schema of your Kuzu database. This context-aware process (RAG) ensures the generated Cypher is accurate and tailored to your graph's structure.
               </p>
             </div>
             <div className="rounded-xl border border-[#2A3239] bg-[#1A2127] p-5">
-              <div className="text-zinc-400 text-sm">Étape 3</div>
-              <div className="mt-1 font-semibold">Résultats & visualisation</div>
+              <div className="text-zinc-400 text-sm">Step 3</div>
+              <div className="mt-1 font-semibold">Execute and Visualize the Results</div>
               <p className="mt-2 text-zinc-300 text-sm">
-                Exécutez, récupérez les résultats formatés, exportez ou visualisez directement.
+                The query is executed against the database. The results are parsed and transformed into a graph format, instantly updating the visual display. For data modifications, you'll be asked for confirmation before any changes are made.
               </p>
             </div>
           </div>
@@ -151,11 +147,10 @@ export default function Home() {
       {/* Demo */}
       <section id="demo" className="border-t border-[#2A3239] bg-[#0F1519]">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold">Démo rapide</h2>
-          <p className="mt-2 text-zinc-400 max-w-2xl">
-            Saisissez une question, obtenez une suggestion Cypher prête à exécuter.
-          </p>
-
+      <h2 className="text-2xl sm:text-3xl font-semibold">Quick Demo</h2>
+      <p className="mt-2 text-zinc-400 max-w-2xl">
+        Type a question and get an executable Cypher query suggestion instantly.
+      </p>
           <div className="mt-6 rounded-2xl border border-[#2A3239] bg-[#1A2127] p-4">
             <div className="flex items-center gap-3">
               <textarea
@@ -169,7 +164,7 @@ export default function Home() {
                 href="/app"
                 className="flex items-center justify-center h-10 px-5 rounded-xl bg-[#34B27B] font-semibold text-[#0B1215] hover:opacity-90 transition-all duration-200"
               >
-                Découvrir
+                Explore
               </Link>
             </div>
 
@@ -193,7 +188,7 @@ export default function Home() {
           <span>© {new Date().getFullYear()} Cypherize</span>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-white">Docs</a>
-            <a href="#" className="hover:text-white">Confidentialité</a>
+            <a href="#" className="hover:text-white">Privacy</a>
             <a href="#" className="hover:text-white">Contact</a>
           </div>
         </div>

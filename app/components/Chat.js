@@ -405,7 +405,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               <span
                 className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-zinc-700"
                 style={{ borderTopColor: "#34B27B" }}
-                aria-label="Chargement"
+                aria-label="Loading"
                 role="status"
               />
             </div>
@@ -435,7 +435,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               <MentionTextarea
                 value={input}
                 onChange={setInput}
-                placeholder="Posez une question..."
+                placeholder={mode === "ai" ? "Ask a question..." : "Enter a Cypher query..."}
                 disabled={false}
                 mode="ai"
               />

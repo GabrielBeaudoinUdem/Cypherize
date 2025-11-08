@@ -43,6 +43,9 @@ CREATE (p)-[:DIRECTED]->(m)
 
 
 // MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m
+// In which year was The Matrix released?
+// remove The Matrix
+// in which movies Keanu Reeves played
 
 CREATE NODE TABLE AllTypesNode (
     id SERIAL,

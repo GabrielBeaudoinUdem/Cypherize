@@ -117,6 +117,7 @@ export default function MentionTextarea({
         >
             <Mention
                 trigger="@"
+                data={[]}
                 appendSpaceOnAdd
                 displayTransform={(id, display) => `@${display}`}
                 markup="@[__display__](__id__)"

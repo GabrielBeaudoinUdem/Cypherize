@@ -11,7 +11,7 @@ import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { looksLikeCypher } from '@/lib/looksLikeCypher';
 import MentionTextarea from './MentionTextarea';
 
-const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
+const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery, ghost }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
   const [messages, setMessages] = useState([]); // { id, sender, type, content }
   const [isLoading, setIsLoading] = useState(false);
@@ -418,7 +418,12 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       {/* Zone de saisie */}
       <div className="flex-shrink-0 px-4 [background-color:#1A2127]">
         <form id="mention-textarea-zone" onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
-          <div className="flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl bg-[#20282E] border border-zinc-700/70 pl-4 pr-1 py-1 transition-colors">
+          <div
+            className={`
+                flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl pl-4 pr-1 py-1 transition-colors transition-transform duration-600
+                ${(ghost) ? '[border:#34B27B_solid_1px] transform scale-102 bg-[rgba(52,178,123,.1)]' : 'bg-[#20282E] border border-zinc-700/70'}
+              `}
+          >
             {/*<textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}

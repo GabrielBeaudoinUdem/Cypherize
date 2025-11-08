@@ -6,7 +6,7 @@ import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import Chat from "@/app/components/Chat";
 import InspectorPanel from "@/app/components/InspectorPanel";
-import { parseKuzuData } from "@/lib/kuzu-parser";
+import { parseKuzuData, getColorForLabel } from "@/lib/kuzu-parser";
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -57,12 +57,11 @@ export default function Home() {
   });
   const [ghost, setGhost] = useState({ visible: false, x: 0, y: 0, kind: null, label: '' });
   const dragRef = useRef(null);
-  const [dragPayload, setDragPayload] = useState(null);
 
   const handleGraphDragStart = ({ id, label }) => {
     dragRef.current = { id, label };
     document.body.classList.add('cursor-grabbing');
-    setGhost({ visible: true, x: 0, y: 0, label: label || id });
+    setGhost({ visible: true, x: 0, y: 0, label: label, id: id });
   };
 
   const handleGraphDragEnd = (e) => {
@@ -193,8 +192,7 @@ export default function Home() {
           }}
         >
           <div className="flex items-center gap-2 px-2 py-1 rounded-md border border-[#2A3239] bg-[#1A2127] text-white text-xs shadow-lg">
-            <span className={`inline-block w-2 h-2 rounded-full ${ghost.kind === 'node' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-            <span>{ghost.kind === 'node' ? '@' : '#'}{ghost.label}</span>
+            <span>{ghost.label}</span>
           </div>
         </div>
       )}
@@ -242,6 +240,7 @@ export default function Home() {
             onAiConfigChange={setAiConfig}
             executeQuery={executeQuery}
             lastQuery={lastQuery}
+            ghost={ghost.visible}
           />
         </Allotment.Pane>
       </Allotment>

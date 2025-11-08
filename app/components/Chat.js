@@ -8,16 +8,33 @@ import BDActionsButtons from './BDActionsButtons';
 import { CheckCircle, AlertCircle  } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { looksLikeCypher } from '@/lib/looksLikeCypher';
+import MentionTextarea from './MentionTextarea';
 
-const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery }) => {
+const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery, ghost }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
   const [messages, setMessages] = useState([]); // { id, sender, type, content }
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [inputWarning, setInputWarning] = useState(0);
   const messagesEndRef = useRef(null);
 
   const input = externalInput;
   const setInput = setExternalInput;
+
+  useEffect(() => {
+    if (input.length > 0) {
+      if (mode === 'ai' && looksLikeCypher(input)) {
+        setInputWarning(1)
+      } else if (mode === 'code' && input.length > 5 && !looksLikeCypher(input)) {
+        setInputWarning(2)
+      } else {
+        setInputWarning(0)
+      }
+    } else {
+      setInputWarning(0)
+    }
+  }, [input])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -123,6 +140,12 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       addMessage('bot', 'text', 'Opération annulée.');
   };
 
+  function transformMentions(msg) {
+    return msg
+      .replace(/@\[(.*?)\]\((.*?)\)/g, '<span style="color:rgba(52, 178, 123, 1);font-weight:bold;">@$1</span>')
+      .replace(/#\[(.*?)\]\((.*?)\)/g, '<span style="color:rgba(52, 178, 123, 1);font-weight:bold;">#$1</span>');
+  }
+
   return (
     <div className="relative flex flex-col h-full rounded-none bg-[#171717] [border-left:#2A2A2A_1px_solid]">
       <SettingsModal
@@ -207,37 +230,52 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
               {/* Titre + sous-titre */}
               <h3 className="text-white font-semibold tracking-tight">
-                Bienvenue dans <span className="text-[#34B27B]">Cypherize</span>
+                Welcome to <span className="text-[#34B27B]">Cypherize</span>
               </h3>
               <p className="mt-1 text-sm">
-                Posez une question en langage naturel ou écrivez une requête <span className="font-mono text-[#34B27B]">Cypher</span>.
+                Ask a question in natural language or write a <span className="font-mono text-[#34B27B]">Cypher</span> query.
               </p>
 
+
               {/* Suggestions */}
-              {/*
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Trouve les 10 nœuds les plus connectés')}
+                  onClick={() => {
+                    if (typeof setExternalInput === 'function') {
+                      setMode('ai');
+                      setExternalInput('How many nodes does this graph have ?');
+                    }
+                  }}
                   className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
                 >
-                  Top nœuds connectés
+                  Number of nodes
                 </button>
                 <button
                   type="button"
-                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Chemin le plus court entre A et B')}
+                  onClick={() => {
+                    if (typeof setExternalInput === 'function') {
+                      setMode('ai');
+                      setExternalInput('How many edges does this graph have ?');
+                    }
+                  }}
                   className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
                 >
-                  Chemin le plus court
+                  Number of edges
                 </button>
                 <button
                   type="button"
-                  onClick={() => typeof setExternalInput === 'function' && setExternalInput('Communautés avec densité > 0.6')}
+                  onClick={() => {
+                    if (typeof setExternalInput === 'function') {
+                      setMode('code');
+                      setExternalInput('MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m');
+                    }
+                  }}
                   className="rounded-full border border-[#2A3239] bg-[#1A2127] px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20282E] hover:text-white transition"
                 >
-                  Communautés denses
+                  Show full graph
                 </button>
-              </div>*/}
+              </div>
 
               {/* Aide clavier */}
               {/*<div className="mt-4 text-[11px] text-zinc-500">
@@ -251,8 +289,19 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
           {messages.map((msg) => (
             <div key={msg.id} className={`flex mb-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.type === 'ai' && (
-                <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-4 py-2 rounded-2xl' : 'text-white'}`}>
-                  <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
+                <div
+                  className={`max-w-[80%] ${
+                    msg.sender === 'user'
+                      ? 'bg-[#252F36] text-white px-4 py-2 rounded-2xl'
+                      : 'text-white'
+                  }`}
+                >
+                  <div
+                    className="whitespace-pre-wrap font-sans text-sm"
+                    dangerouslySetInnerHTML={{
+                      __html: transformMentions(msg.content),
+                    }}
+                  />
                 </div>
               )}
 
@@ -324,9 +373,28 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               )}
               {msg.type === 'confirmation' && msg.content.confirmed && (
                   <div className="w-full my-2">
-                      <div className="bg-gray-700 rounded-lg p-4 border-l-4 border-green-500 opacity-70">
-                          <p className="text-sm italic text-gray-300">Requête exécutée :</p>
-                          <pre className="mt-2 bg-gray-900 text-white p-2 rounded-md text-xs font-mono whitespace-pre-wrap"><code>{msg.content.query}</code></pre>
+                      <div className="bg-[#252F36] rounded-sm p-2 my-2 border-l-4 border-[#34B27B]">
+                          <SyntaxHighlighter
+                            language="cypher"
+                            style={tomorrow}
+                            wrapLongLines
+                            PreTag="div"
+                            customStyle={{
+                              background: "#11181C",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              fontFamily: "monospace",
+                              padding: "12px",
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              overflow: "hidden",
+                            }}
+                            codeTagProps={{
+                              style: { whiteSpace: "pre-wrap", wordBreak: "break-word" },
+                            }}
+                          >
+                            {msg.content.query}
+                          </SyntaxHighlighter>
                       </div>
                   </div>
               )}
@@ -348,17 +416,29 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
     </div>
 
       {/* Zone de saisie */}
-      <div className="flex-shrink-0 px-4 py-3 [background-color:#1A2127]">
-        <form onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
-          <div className="flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl bg-[#20282E] border border-zinc-700/70 pl-4 pr-1 py-1 transition-colors">
-            <textarea
+      <div className="flex-shrink-0 px-4 [background-color:#1A2127]">
+        <form id="mention-textarea-zone" onSubmit={handleSendMessage} className="w-full max-w-3xl mx-auto px-3 sm:px-4">
+          <div
+            className={`
+                flex items-end gap-2 sm:gap-3 rounded-3xl sm:rounded-3xl pl-4 pr-1 py-1 transition-colors transition-transform duration-600
+                ${(ghost) ? '[border:#34B27B_solid_1px] transform scale-102 bg-[rgba(52,178,123,.1)]' : 'bg-[#20282E] border border-zinc-700/70'}
+              `}
+          >
+            {/*<textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={mode === "ai" ? "Posez une question..." : "Entrez une requête Cypher..."}
               rows={1}
               className="flex-1 resize-none outline-none bg-transparent text-[15px] leading-6 placeholder:text-zinc-500 text-zinc-100 max-h-48 py-1.5"
               disabled={isLoading}
-            />
+            />*/}
+              <MentionTextarea
+                value={input}
+                onChange={setInput}
+                placeholder="Posez une question..."
+                disabled={false}
+                mode="ai"
+              />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
@@ -381,6 +461,34 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
             </button>
           </div>
         </form>
+
+        <div className="my-1 text-[11px] text-zinc-400/50 text-center">
+              {(inputWarning == 0) && ( <>Cypherize can make mistakes. Please check answers.</> )}
+
+              { (inputWarning == 1) && (
+                <>
+                  That looks like Cypher...
+                  <span
+                    className="text-[#34B27B] pl-1 opacity-80 hover:opacity-100 cursor-default duration-100"
+                    onClick={() => { setMode('code'); setInputWarning(0); }}
+                  >
+                    Switch mode ?
+                  </span>
+                </>
+              ) }
+
+              { (inputWarning == 2) && (
+                <>
+                  That doesn't look like Cypher...
+                  <span
+                    className="text-[#34B27B] pl-1 opacity-80 hover:opacity-100 cursor-default duration-100"
+                    onClick={() => { setMode('ai'); setInputWarning(0); }}
+                  >
+                    Switch mode ?
+                  </span>
+                </>
+              ) }
+        </div>
       </div>
     </div>
   );

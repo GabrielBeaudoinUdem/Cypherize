@@ -3,9 +3,10 @@
 import React, { useEffect, useRef } from 'react';
 import * as G6 from '@antv/g6';
 
-const GraphView = ({ data, onElementClick }) => {
+const GraphView = ({ data, onElementClick, onDragStart, onDragEnd, onDragMove }) => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
+  const winMoveRef = useRef(null);
 
   useEffect(() => {
     if (graphRef.current) return;
@@ -15,7 +16,7 @@ const GraphView = ({ data, onElementClick }) => {
       width: containerRef.current.scrollWidth,
       height: containerRef.current.scrollHeight,
       fitView: true,
-      behaviors: ['drag-canvas'],
+      behaviors: ['drag-canvas', 'zoom-canvas', 'drag-node', 'drag-edge'],
       modes: {
         default: ['drag-canvas', 'zoom-canvas', 'drag-node', 'drag-edge']
       },
@@ -25,6 +26,19 @@ const GraphView = ({ data, onElementClick }) => {
         labelCfg: { autoRotate: true, style: { fill: '#fff', background: { fill: '#5f5f5f', padding: [2, 5], radius: 2 } } },
         style: { lineWidth: 3 }
       },
+      plugins: [{
+        type: 'grid-line',
+        key: 'bg-dots',
+        follow: true,
+        size: 20,                  // espacement entre points
+        lineDash: [0, 20],         // fait apparaître des points plutôt que des lignes
+        stroke: '#11181C',         // couleur des points
+        lineWidth: 18,              // épaisseur du point
+        opacity: 0.6,
+        zIndex: -1,
+        borderStroke: '#11181C', // Blue border
+        borderLineWidth: 0,
+      }],
     });
 
     const handleNodeClick = (evt) => {
@@ -43,8 +57,43 @@ const GraphView = ({ data, onElementClick }) => {
       onElementClick(element);
     };
 
+    const addGlobalMove = () => {
+      if (winMoveRef.current) return;
+      winMoveRef.current = (ev) => {
+        onDragMove?.({ x: ev.clientX, y:  ev.clientY });
+      };
+      window.addEventListener('pointermove', winMoveRef.current, { passive: true });
+      window.addEventListener('mousemove', winMoveRef.current, { passive: true }); // fallback
+    };
+
+    const removeGlobalMove = () => {
+      if (!winMoveRef.current) return;
+      window.removeEventListener('pointermove', winMoveRef.current);
+      window.removeEventListener('mousemove', winMoveRef.current);
+      winMoveRef.current = null;
+    };
+
     graphRef.current.on('node:click', handleNodeClick);
     graphRef.current.on('edge:click', handleEdgeClick);
+    graphRef.current.on('node:dragstart', (e) => {
+      const id = e.target?.id;
+      const label = e.target?.attributes?.labelText;
+      if (onDragStart) {
+        onDragStart({ id, label });
+        addGlobalMove()
+      }
+    });
+
+    graphRef.current.on('node:dragend', (e) => {
+      if (onDragEnd) {
+        onDragEnd(e);
+        removeGlobalMove()
+      }
+    });
+    graphRef.current.on('node:drag', (e) => {
+      onDragMove?.({ x: e.page.x, y:  e.page.y });
+    });
+
 
     graphRef.current.setData(data);
     graphRef.current.render();
@@ -69,7 +118,7 @@ const GraphView = ({ data, onElementClick }) => {
     }
   }, [data]);
 
-  return <div ref={containerRef} className="h-full w-full bg-[#11181C]" />;
+  return <div ref={containerRef} className="h-full w-full bg-[#2a2f33]" />;
 };
 
 export default GraphView;

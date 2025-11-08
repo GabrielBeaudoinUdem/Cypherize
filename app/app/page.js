@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import dynamic from 'next/dynamic';
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import Chat from "@/app/components/Chat";
 import InspectorPanel from "@/app/components/InspectorPanel";
-import { parseKuzuData } from "@/lib/kuzu-parser";
+import { parseKuzuData, getColorForLabel } from "@/lib/kuzu-parser";
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -55,6 +55,44 @@ export default function Home() {
     url: "http://localhost:1234/v1/chat/completions",
     model: "mistralai/devstral-small-2507",
   });
+  const [ghost, setGhost] = useState({ visible: false, x: 0, y: 0, kind: null, label: '' });
+  const dragRef = useRef(null);
+
+  const handleGraphDragStart = ({ id, label }) => {
+    dragRef.current = { id, label };
+    document.body.classList.add('cursor-grabbing');
+    setGhost({ visible: true, x: 0, y: 0, label: label, id: id });
+  };
+
+  const handleGraphDragEnd = (e) => {
+    document.body.classList.remove('cursor-grabbing');
+    const payload = dragRef.current;
+    if (!payload) return;
+
+    const clientX = e.client.x;
+    const clientY = e.client.y;
+
+    // Récupère la zone du textarea (le composant MentionTextarea)
+    const target = document.getElementById('mention-textarea-zone');
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+
+    // Vérifie si le curseur est au-dessus
+    const inside =
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom;
+
+    if (inside) {
+      const token = `@[${payload.label}](${payload.id})`;
+      setChatInput(prev => (prev ? `${prev} ${token}` : token));
+    }
+
+    dragRef.current = null;
+    setGhost(g => ({ ...g, visible: false }));
+  };
+
 
   const executeQuery = async (query) => {
     try {
@@ -112,6 +150,10 @@ export default function Home() {
     }
   };
 
+  const handleGraphDragMove = ({ x, y }) => {
+    setGhost(g => g.visible ? { ...g, x, y } : g);
+  };
+
   const handleDeleteElement = async (deleteQuery) => {
     try {
       await executeQuery(deleteQuery);
@@ -140,6 +182,21 @@ export default function Home() {
 
   return (
     <main className="h-screen w-screen text-black dark:text-white bg-[#11181C]">
+      {ghost.visible && (
+        <div
+          className="fixed z-[9999] pointer-events-none select-none"
+          style={{
+            left: ghost.x,
+            top: ghost.y,
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <div className="flex items-center gap-2 px-2 py-1 rounded-md border border-[#2A3239] bg-[#1A2127] text-white text-xs shadow-lg">
+            <span>{ghost.label}</span>
+          </div>
+        </div>
+      )}
+
       <Allotment>
         <Allotment.Pane
           visible={!!selectedElement}
@@ -160,7 +217,13 @@ export default function Home() {
         </Allotment.Pane>
 
         <Allotment.Pane minSize={300}>
-          <GraphView data={graphData} onElementClick={handleElementClick} />
+          <GraphView
+            data={graphData}
+            onElementClick={handleElementClick}
+            onDragMove={handleGraphDragMove}
+            onDragStart={handleGraphDragStart}
+            onDragEnd={handleGraphDragEnd}
+          />
         </Allotment.Pane>
 
         <Allotment.Pane
@@ -177,6 +240,7 @@ export default function Home() {
             onAiConfigChange={setAiConfig}
             executeQuery={executeQuery}
             lastQuery={lastQuery}
+            ghost={ghost.visible}
           />
         </Allotment.Pane>
       </Allotment>

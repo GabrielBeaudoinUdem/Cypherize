@@ -1,35 +1,109 @@
 import { NextResponse } from 'next/server';
 import { getDbSchema, executeCypherQuery } from '../../../lib/kuzu-db';
 
-async function callLLM(config, messages) {
-  const payload = {
-    model: config.model,
-    messages: messages,
-    temperature: 0.2,
-    stream: false,
-  };
-
-  const externalResponse = await fetch(config.url, {
+async function callLMStudio(config, messages) {
+  const payload = { model: config.model, messages, temperature: 0.2, stream: false };
+  const response = await fetch(config.url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
-  if (!externalResponse.ok) {
-    const errorBody = await externalResponse.text();
-    console.error("External API Error:", errorBody);
-    throw new Error(`External API responded with status ${externalResponse.status}.`);
+  if (!response.ok) {
+    throw new Error(`LM Studio API responded with status ${response.status}.`);
   }
-  
-  return await externalResponse.json();
+  const data = await response.json();
+  return data.choices[0]?.message?.content;
 }
+
+async function callOpenAI(config, messages) {
+  const payload = { model: config.model, messages, temperature: 0.2, stream: false };
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`OpenAI API responded with status ${response.status}.`);
+  }
+  const data = await response.json();
+  return data.choices[0]?.message?.content;
+}
+
+async function callClaude(config, messages) {
+  const systemPrompt = messages.find(m => m.role === 'system')?.content || "";
+  const userMessages = messages.filter(m => m.role !== 'system');
+  const payload = {
+    model: config.model,
+    system: systemPrompt,
+    messages: userMessages,
+    max_tokens: 2048,
+    temperature: 0.2,
+  };
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': config.apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`Claude API responded with status ${response.status}.`);
+  }
+  const data = await response.json();
+  return data.content[0]?.text;
+}
+
+async function callGemini(config, messages) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
+  
+  const transformedMessages = messages.map(m => ({
+    role: m.role === 'assistant' ? 'model' : m.role,
+    parts: [{ text: m.content }],
+  }));
+  const payload = { contents: transformedMessages };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error(`Gemini API responded with status ${response.status}.`);
+  }
+  const data = await response.json();
+  return data.candidates[0]?.content.parts[0]?.text;
+}
+
+async function callLLM(config, messages) {
+    const provider = config.provider;
+    const providerConfig = config[provider];
+
+    switch (provider) {
+        case 'lmstudio':
+            return callLMStudio(providerConfig, messages);
+        case 'openai':
+            return callOpenAI(providerConfig, messages);
+        case 'claude':
+            return callClaude(providerConfig, messages);
+        case 'gemini':
+            return callGemini(providerConfig, messages);
+        default:
+            throw new Error(`Unsupported AI provider: ${provider}`);
+    }
+}
+
 
 export async function POST(request) {
   try {
     const { config, prompt, confirmedQuery } = await request.json();
 
-    if (!config || !config.url || !config.model) {
-      return NextResponse.json({ error: 'AI model configuration is missing.' }, { status: 400 });
+    if (!config || !config.provider) {
+      return NextResponse.json({ error: 'AI provider configuration is missing.' }, { status: 400 });
     }
 
     if (confirmedQuery) {
@@ -61,21 +135,22 @@ ${schemaString}`
       },
       { role: 'user', content: prompt }
     ];
-
-    const planningResponse = await callLLM(config, planningMessages);
+    
+    const planningResponseContent = await callLLM(config, planningMessages);
     let plan;
     try {
-        const content = planningResponse.choices[0]?.message?.content;
-        plan = JSON.parse(content);
-        if (!plan.intent || !plan.query) throw new Error("Invalid JSON format");
+        plan = JSON.parse(planningResponseContent);
+        if (!plan.intent || !plan.query) throw new Error("Invalid JSON format from LLM.");
     } catch(e) {
-        console.error("Error parsing LLM response:", e);
+        console.error("Error parsing LLM planning response:", e, `\nContent: ${planningResponseContent}`);
         return NextResponse.json({ type: 'answer', text: "Sorry, I couldn't generate a valid query. Please try rephrasing.", success: false });
     }
 
     if (plan.intent === 'write') {
       return NextResponse.json({ type: 'confirmation', query: plan.query });
-    } else if (plan.intent === 'read') {
+    } 
+    
+    if (plan.intent === 'read') {
       let queryResult;
       try {
           queryResult = await executeCypherQuery(plan.query);
@@ -86,18 +161,17 @@ ${schemaString}`
       const finalAnswerMessages = [
         {
           role: 'system',
-          content: "You are a helpful assistant. Based on the user's original question and the following JSON data extracted from the database, provide a clear and concise answer in natural language. Do not show the JSON data to the user."
+          content: "You are a helpful assistant. Based on the user's original question and the following JSON data, provide a clear and concise answer in natural language. Do not show the JSON data to the user."
         },
         { role: 'user', content: `My question was: "${prompt}"\n\nHere is the data obtained:\n${JSON.stringify(queryResult, null, 2)}` }
       ];
-
-      const finalResponse = await callLLM(config, finalAnswerMessages);
-      const answerText = finalResponse.choices[0]?.message?.content || "I was unable to formulate a response.";
+      
+      const answerText = await callLLM(config, finalAnswerMessages) || "I was unable to formulate a response.";
       
       return NextResponse.json({ type: 'answer', text: answerText, query: plan.query, data: queryResult, success: true });
-    } else {
-      return NextResponse.json({ type: 'answer', text: `Unrecognized intent: ${plan.intent}`, success: false });
-    }
+    } 
+    
+    return NextResponse.json({ type: 'answer', text: `Unrecognized intent: ${plan.intent}`, success: false });
 
   } catch (error) {
     console.error("Internal error in /api/ai:", error);

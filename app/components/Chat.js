@@ -5,6 +5,7 @@ import SettingsButton from './SettingsButton';
 import SettingsModal from './SettingsModal';
 import QueryConfirmation from './QueryConfirmation';
 import BDActionsButtons from './BDActionsButtons';
+import AiAnswer from './AiAnswer'; 
 import { CheckCircle, AlertCircle  } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
@@ -64,7 +65,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
       if (result.type === 'confirmation') {
         addMessage('bot', 'confirmation', { query: result.query });
       } else if (result.type === 'answer') {
-        addMessage('bot', 'text', result.text);
+        addMessage('bot', 'answer', { text: result.text, query: result.query, data: result.data });
         if (payload.confirmedQuery) {
             isSuccess = result.success === true;
         }
@@ -305,6 +306,12 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                 </div>
               )}
 
+              {msg.type === 'answer' && (
+                <div className="w-full">
+                  <AiAnswer content={msg.content} />
+                </div>
+              )}
+
               {msg.type === 'text' && (
                 <div className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-md ${msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-white'}`}>
                   <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
@@ -345,7 +352,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                   >
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-[#34B27B]" />
-                      <span className="font-normal text-[#34B27B] text-sm">Requête exécutée avec succès.</span>
+                      <span className="font-normal text-[#34B27B] text-sm">Query executed successfully.</span>
                     </div>
                   </div>
                 </div>
@@ -356,7 +363,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                     <div className="flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 text-[#E45858]" />
                       <span className="font-normal text-[#E45858] text-sm">
-                        Erreur lors de l’exécution de la requête.
+                        Error executing query: {msg.content}
                       </span>
                     </div>
                   </div>
@@ -424,14 +431,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                 ${(ghost) ? '[border:#34B27B_solid_1px] transform scale-102 bg-[rgba(52,178,123,.1)]' : 'bg-[#20282E] border border-zinc-700/70'}
               `}
           >
-            {/*<textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={mode === "ai" ? "Posez une question..." : "Entrez une requête Cypher..."}
-              rows={1}
-              className="flex-1 resize-none outline-none bg-transparent text-[15px] leading-6 placeholder:text-zinc-500 text-zinc-100 max-h-48 py-1.5"
-              disabled={isLoading}
-            />*/}
               <MentionTextarea
                 value={input}
                 onChange={setInput}

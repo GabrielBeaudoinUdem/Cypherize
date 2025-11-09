@@ -52,8 +52,23 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [lastQuery, setLastQuery] = useState("");
   const [aiConfig, setAiConfig] = useState({
-    url: "http://localhost:1234/v1/chat/completions",
-    model: "mistralai/devstral-small-2507",
+    provider: 'lmstudio', // 'lmstudio', 'openai', 'gemini', 'claude'
+    lmstudio: {
+      url: "http://localhost:1234/v1/chat/completions",
+      model: "mistralai/devstral-small-2507",
+    },
+    openai: {
+      apiKey: "",
+      model: "gpt-5-mini",
+    },
+    gemini: {
+      apiKey: "",
+      model: "gemini-2.5-flash", 
+    },
+    claude: {
+      apiKey: "",
+      model: "claude-sonnet-4-20250514",
+    }
   });
   const [ghost, setGhost] = useState({ visible: false, x: 0, y: 0, kind: null, label: '' });
   const dragRef = useRef(null);
@@ -103,12 +118,12 @@ export default function Home() {
       });
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData.error || "Une erreur est survenue lors de la requête API.");
+        throw new Error(errData.error || "An API error occurred.");
       }
       const data = await response.json();
       return data.result;
     } catch (error) {
-      console.error("Erreur lors de l'exécution de la requête:", error);
+      console.error("Error executing query:", error);
       throw error;
     }
   };
@@ -123,7 +138,7 @@ export default function Home() {
   const handleSaveChanges = async (updateQuery) => {
     try {
       await executeQuery(updateQuery);
-      console.log("Élément sauvegardé.");
+      console.log("Element saved.");
 
       if (lastQuery) {
         const freshResult = await executeQuery(lastQuery);
@@ -146,7 +161,7 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error("Échec de la sauvegarde.");
+      console.error("Save failed.");
     }
   };
 
@@ -157,7 +172,7 @@ export default function Home() {
   const handleDeleteElement = async (deleteQuery) => {
     try {
       await executeQuery(deleteQuery);
-      console.log("Élément supprimé.");
+      console.log("Element deleted.");
       setSelectedElement(null);
 
       if (lastQuery) {
@@ -168,7 +183,7 @@ export default function Home() {
         setGraphData({ nodes: [], edges: [] });
       }
     } catch (error) {
-        console.error("Échec de la suppression.");
+        console.error("Delete failed.");
     }
   };
 

@@ -63,7 +63,7 @@ export default function Home() {
     },
     gemini: {
       apiKey: "",
-      model: "gemini-2.5-flash", 
+      model: "gemini-2.5-flash",
     },
     claude: {
       apiKey: "",
@@ -72,6 +72,7 @@ export default function Home() {
   });
   const [ghost, setGhost] = useState({ visible: false, x: 0, y: 0, kind: null, label: '' });
   const dragRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   const handleGraphDragStart = ({ id, label }) => {
     dragRef.current = { id, label };
@@ -238,6 +239,7 @@ export default function Home() {
             onDragMove={handleGraphDragMove}
             onDragStart={handleGraphDragStart}
             onDragEnd={handleGraphDragEnd}
+            loading={loading}
           />
         </Allotment.Pane>
 
@@ -256,6 +258,7 @@ export default function Home() {
             executeQuery={executeQuery}
             lastQuery={lastQuery}
             ghost={ghost.visible}
+            setLoading={setLoading}
           />
         </Allotment.Pane>
       </Allotment>

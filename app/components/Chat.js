@@ -5,14 +5,14 @@ import SettingsButton from './SettingsButton';
 import SettingsModal from './SettingsModal';
 import QueryConfirmation from './QueryConfirmation';
 import BDActionsButtons from './BDActionsButtons';
-import AiAnswer from './AiAnswer'; 
+import AiAnswer from './AiAnswer';
 import { CheckCircle, AlertCircle  } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { looksLikeCypher } from '@/lib/looksLikeCypher';
 import MentionTextarea from './MentionTextarea';
 
-const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery, ghost }) => {
+const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiConfigChange, executeQuery, lastQuery, ghost, setLoading }) => {
   const [mode, setMode] = useState('ai'); // 'ai' ou 'code'
   const [messages, setMessages] = useState([]); // { id, sender, type, content }
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +84,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+    setLoading(true)
 
     addMessage('user', mode, input);
     const queryToSend = input;
@@ -114,6 +115,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         setIsLoading(false);
       }
     }
+    setLoading(false)
   };
 
   const handleConfirmQuery = async (query) => {

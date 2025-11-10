@@ -61,23 +61,45 @@ async function callClaude(config, messages) {
 async function callGemini(config, messages) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
   
-  const transformedMessages = messages.map(m => ({
-    role: m.role === 'assistant' ? 'model' : m.role,
+  const contents = messages.map(m => ({
+    role: m.role === 'system' ? 'user' : m.role,
     parts: [{ text: m.content }],
   }));
-  const payload = { contents: transformedMessages };
+
+  const payload = {
+    contents,
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 2048,
+    },
+  };
 
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+
   if (!response.ok) {
-    throw new Error(`Gemini API responded with status ${response.status}.`);
+    const text = await response.text();
+    throw new Error(`Gemini API responded with status ${response.status}: ${text}`);
   }
+
   const data = await response.json();
-  return data.candidates[0]?.content.parts[0]?.text;
+
+  const textResponse =
+    data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+    data?.candidates?.[0]?.output ||
+    data?.candidates?.[0]?.text ||
+    null;
+
+  if (!textResponse) {
+    throw new Error(`Unexpected Gemini response format: ${JSON.stringify(data)}`);
+  }
+
+  return textResponse;
 }
+
 
 async function callLLM(config, messages) {
     const provider = config.provider;
@@ -139,13 +161,23 @@ ${schemaString}`
     const planningResponseContent = await callLLM(config, planningMessages);
     let plan;
     try {
-        plan = JSON.parse(planningResponseContent);
-        if (!plan.intent || !plan.query) throw new Error("Invalid JSON format from LLM.");
-    } catch(e) {
-        console.error("Error parsing LLM planning response:", e, `\nContent: ${planningResponseContent}`);
-        return NextResponse.json({ type: 'answer', text: "Sorry, I couldn't generate a valid query. Please try rephrasing.", success: false });
-    }
+        const cleaned = planningResponseContent
+          .replace(/```json\s*/i, '')
+          .replace(/```\s*$/, '')
+          .trim();
 
+        plan = JSON.parse(cleaned);
+
+        if (!plan.intent || !plan.query)
+            throw new Error("Invalid JSON format from LLM.");
+    } catch (e) {
+        console.error("Error parsing LLM planning response:", e, `\nContent: ${planningResponseContent}`);
+        return NextResponse.json({
+            type: 'answer',
+            text: "Sorry, I couldn't generate a valid query. Please try rephrasing.",
+            success: false
+        });
+    }
     if (plan.intent === 'write') {
       return NextResponse.json({ type: 'confirmation', query: plan.query });
     } 

@@ -60,7 +60,7 @@ async function callClaude(config, messages) {
 
 async function callGemini(config, messages) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
-  
+
   const contents = messages.map(m => ({
     role: m.role === 'system' ? 'user' : m.role,
     parts: [{ text: m.content }],
@@ -131,12 +131,12 @@ export async function POST(request) {
     if (confirmedQuery) {
         try {
             await executeCypherQuery(confirmedQuery);
-            return NextResponse.json({ type: 'answer', text: "The modification was successful.", success: true });
+            return NextResponse.json({ type: 'none', text: "The modification was successful.", success: true });
         } catch(e) {
-            return NextResponse.json({ type: 'answer', text: `Error executing query: ${e.message}`, success: false });
+            return NextResponse.json({ type: 'error', text: `${e.message}`, success: false });
         }
     }
-    
+
     if (!prompt) {
         return NextResponse.json({ error: 'User message is missing.' }, { status: 400 });
     }
@@ -157,7 +157,7 @@ ${schemaString}`
       },
       { role: 'user', content: prompt }
     ];
-    
+
     const planningResponseContent = await callLLM(config, planningMessages);
     let plan;
     try {
@@ -180,8 +180,8 @@ ${schemaString}`
     }
     if (plan.intent === 'write') {
       return NextResponse.json({ type: 'confirmation', query: plan.query });
-    } 
-    
+    }
+
     if (plan.intent === 'read') {
       let queryResult;
       try {
@@ -197,12 +197,12 @@ ${schemaString}`
         },
         { role: 'user', content: `My question was: "${prompt}"\n\nHere is the data obtained:\n${JSON.stringify(queryResult, null, 2)}` }
       ];
-      
+
       const answerText = await callLLM(config, finalAnswerMessages) || "I was unable to formulate a response.";
-      
+
       return NextResponse.json({ type: 'answer', text: answerText, query: plan.query, data: queryResult, success: true });
-    } 
-    
+    }
+
     return NextResponse.json({ type: 'answer', text: `Unrecognized intent: ${plan.intent}`, success: false });
 
   } catch (error) {

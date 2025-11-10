@@ -73,7 +73,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
     } catch (error) {
       console.error("Erreur API AI:", error);
-      addMessage('bot', 'text', `Erreur: ${error.message}`);
+      addMessage('bot', 'error', `${error.message}`);
       isSuccess = false;
     } finally {
       setIsLoading(false);
@@ -315,7 +315,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               )}
 
               {msg.type === 'text' && (
-                <div className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-md ${msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-white'}`}>
+                <div className={`max-w-[80%] px-4 py-2 rounded-lg ${msg.sender === 'user' ? 'bg-blue-600 text-white' : 'border border-[#2A3239] text-white'}`}>
                   <pre className="whitespace-pre-wrap font-sans text-sm">{msg.content}</pre>
                 </div>
               )}
@@ -365,7 +365,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                     <div className="flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 text-[#E45858]" />
                       <span className="font-normal text-[#E45858] text-sm">
-                        Error executing query: {msg.content}
+                        Error : {msg.content}
                       </span>
                     </div>
                   </div>

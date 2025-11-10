@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as G6 from '@antv/g6';
 
-const GraphView = ({ data, onElementClick, onDragStart, onDragEnd, onDragMove }) => {
+const GraphView = ({ data, onElementClick, onDragStart, onDragEnd, onDragMove, loading }) => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
   const winMoveRef = useRef(null);
@@ -118,7 +118,23 @@ const GraphView = ({ data, onElementClick, onDragStart, onDragEnd, onDragMove })
     }
   }, [data]);
 
-  return <div ref={containerRef} className="h-full w-full bg-[#2a2f33]" />;
+  return (
+    <div
+      ref={containerRef}
+      className={`h-full w-full bg-[#2a2f33] ${
+        loading ? "animate-[wave_5s_linear_infinite]" : ""
+      }`}
+      style={
+        loading
+          ? {
+              backgroundImage:
+                "repeating-linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.5) 55%, transparent 80%)",
+              backgroundSize: "200% 100%",
+            }
+          : {}
+      }
+    />
+  );
 };
 
 export default GraphView;

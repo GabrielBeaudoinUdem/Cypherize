@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CheckCircle } from 'lucide-react';
 
 const providers = [
   { id: 'lmstudio', name: 'LM Studio' },
@@ -112,12 +113,13 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
               <button
                 key={provider.id}
                 onClick={() => setActiveProvider(provider.id)}
-                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`inline-flex items-center gap-2 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeProvider === provider.id
                     ? 'border-[#34B27B] text-[#34B27B]'
                     : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
                 }`}
               >
+                {config.provider === provider.id && <CheckCircle className="w-4 h-4 text-[#34B27B]" />}
                 {provider.name}
               </button>
             ))}

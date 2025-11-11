@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import dynamic from 'next/dynamic';
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
@@ -8,6 +8,7 @@ import Chat from "@/app/components/Chat";
 import InspectorPanel from "@/app/components/InspectorPanel";
 import { parseKuzuData, getColorForLabel } from "@/lib/kuzu-parser";
 import { Poppins } from "next/font/google";
+import toast from 'react-hot-toast';
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ const GraphView = dynamic(
   }
 );
 
+const AI_CONFIG_STORAGE_KEY = 'cypherize-ai-config';
 
 export default function Home() {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
@@ -63,16 +65,50 @@ export default function Home() {
     },
     gemini: {
       apiKey: "",
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-pro",
     },
     claude: {
       apiKey: "",
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4",
     }
   });
   const [ghost, setGhost] = useState({ visible: false, x: 0, y: 0, kind: null, label: '' });
   const dragRef = useRef(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedConfig = localStorage.getItem(AI_CONFIG_STORAGE_KEY);
+      if (savedConfig) {
+        const parsedConfig = JSON.parse(savedConfig);
+        setAiConfig(prevConfig => ({
+          ...prevConfig,
+          ...parsedConfig,
+          lmstudio: { ...prevConfig.lmstudio, ...parsedConfig.lmstudio },
+          openai: { ...prevConfig.openai, ...parsedConfig.openai },
+          gemini: { ...prevConfig.gemini, ...parsedConfig.gemini },
+          claude: { ...prevConfig.claude, ...parsedConfig.claude },
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to load AI config from localStorage:", error);
+    }
+  }, []);
+
+
+  const handleAiConfigChange = (newConfig) => {
+    try {
+      setAiConfig(newConfig);
+      localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify(newConfig));
+      const activeProvider = newConfig.provider;
+      const activeModel = newConfig[activeProvider].model;
+      toast.success(`Configuration enregistrée ! Modèle actif : ${activeModel}`);
+    } catch (error) {
+      console.error("Failed to save AI config to localStorage:", error);
+      toast.error("Impossible d'enregistrer la configuration.");
+    }
+  };
+
 
   const handleGraphDragStart = ({ id, label }) => {
     dragRef.current = { id, label };
@@ -254,7 +290,7 @@ export default function Home() {
             externalInput={chatInput}
             setExternalInput={setChatInput}
             aiConfig={aiConfig}
-            onAiConfigChange={setAiConfig}
+            onAiConfigChange={handleAiConfigChange}
             executeQuery={executeQuery}
             lastQuery={lastQuery}
             ghost={ghost.visible}

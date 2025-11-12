@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import SettingsButton from './SettingsButton';
 import SettingsModal from './SettingsModal';
+import AiImportModal from './AiImportModal';
 import QueryConfirmation from './QueryConfirmation';
 import BDActionsButtons from './BDActionsButtons';
 import AiAnswer from './AiAnswer';
@@ -17,6 +18,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
   const [messages, setMessages] = useState([]); // { id, sender, type, content }
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAiImportOpen, setIsAiImportOpen] = useState(false);
   const [inputWarning, setInputWarning] = useState(0);
   const messagesEndRef = useRef(null);
 
@@ -68,10 +70,10 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         isSuccess = result.success === true;
       } else if (result.type === 'graph') {
         onQuerySuccess(result.data, result.query);
-        addMessage('bot', 'answer', { 
-          text: "The graph has been updated.", 
-          query: result.query, 
-          data: result.data 
+        addMessage('bot', 'answer', {
+          text: "The graph has been updated.",
+          query: result.query,
+          data: result.data
         });
         isSuccess = true;
       }
@@ -103,7 +105,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
           let role = m.sender === 'user' ? 'user' : 'assistant';
           let content = '';
           if (m.type === 'answer') {
-            content = m.content.text; 
+            content = m.content.text;
           } else {
             content = m.content;
           }
@@ -174,10 +176,20 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         onSave={onAiConfigChange}
       />
 
+      <AiImportModal
+        isOpen={isAiImportOpen}
+        onClose={() => setIsAiImportOpen(false)}
+        aiConfig={aiConfig}
+        onQuerySuccess={onQuerySuccess}
+      />
+
       {/* Header */}
       <div className="flex items-center p-4 border-gray-700 bg-[#20282E] gap-3">
         <SettingsButton onClick={() => setIsSettingsOpen(true)} />
-        <BDActionsButtons onQuerySuccess={onQuerySuccess} />
+        <BDActionsButtons 
+          onQuerySuccess={onQuerySuccess} 
+          onAiImportClick={() => setIsAiImportOpen(true)} 
+        />
 
         <div className="flex-grow flex justify-end">
           <div

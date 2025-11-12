@@ -93,7 +93,7 @@ function toCypherMap(obj) {
   return `{ ${entries.join(', ')} }`;
 }
 
-const BDActionsButtons = ({ onQuerySuccess }) => {
+const BDActionsButtons = ({ onQuerySuccess, onAiImportClick }) => {
   const buttonStyle = "p-2 text-gray-300 hover:bg-gray-800 transition-colors border-r border-[#2A3239] last:border-r-0";
 
   const handleExport = async () => {
@@ -235,7 +235,7 @@ const BDActionsButtons = ({ onQuerySuccess }) => {
         <button onClick={handleClickImport} className={buttonStyle}>
           <ImportIcon />
         </button>
-        <button onClick={() => {}} className={`${buttonStyle} group`}>
+        <button onClick={onAiImportClick} className={`${buttonStyle} group`}>
           <AiImportIconWithAnimation />
         </button>
         {/*<button onClick={() => {}} className={buttonStyle}>

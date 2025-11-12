@@ -111,7 +111,6 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${isOpen ? 'opacity-100 bg-[rgba(17,24,28,0.8)] backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`}
-      onClick={onClose}
     >
       <div
         className={`w-full max-w-md mx-4 p-6 rounded-lg border shadow-xl transform transition-all duration-300 bg-[#1A2127] border-[#2A3239] ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}

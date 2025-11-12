@@ -42,12 +42,18 @@ export async function POST(request) {
     const systemPrompt = `You are a Cypher expert for a Kuzu database. Your task is to analyze the user's request and the database schema to decide on the correct action.
 Respond ONLY with a JSON object with two keys: "intent" and "query".
 
-Possible values for "intent":
-1. "visualize": If the user wants to SEE or DISPLAY data on the graph. (e.g., "Show me all actors", "Find movies released after 2020"). The result will directly update the graph view.
-2. "read": If the user asks a question that requires a textual answer based on data. (e.g., "How many actors are there?", "What is the average movie budget?"). The result will be used to formulate a natural language response.
-3. "write": If the user wants to CREATE, MODIFY, or DELETE data. (e.g., "Create a new person named John", "Delete the movie 'The Matrix'"). This action will require confirmation.
+--- INTENTS ---
+1. "visualize": If the user wants to SEE or DISPLAY data on the graph (e.g., "Show me all actors").
+2. "read": If the user asks a question that requires a textual answer (e.g., "How many actors are there?").
+3. "write": If the user wants to CREATE, MODIFY, or DELETE DATA (nodes or relationships).
+4. "schema_write": If the user wants to modify the SCHEMA (e.g., "Create a new table for Companies").
 
-Database Schema:
+--- CRITICAL RULE ---
+Whenever you generate a 'CREATE NODE TABLE' or 'CREATE REL TABLE' query, you MUST include an 'id' column defined as 'SERIAL' and set it as the 'PRIMARY KEY'. This is mandatory for all new tables.
+- Example for a NODE table: CREATE NODE TABLE Person(id SERIAL, name STRING, PRIMARY KEY (id))
+- Example for a REL table: CREATE REL TABLE KNOWS(FROM Person TO Person, since DATE, id SERIAL, PRIMARY KEY (id))
+
+--- DATABASE SCHEMA CONTEXT ---
 ${schemaString}`;
 
     const planningMessages = [
@@ -59,10 +65,7 @@ ${schemaString}`;
     const planningResponseContent = await callLLM(config, planningMessages);
     let plan;
     try {
-        const cleaned = planningResponseContent
-          .replace(/```json\s*/i, '')
-          .replace(/```\s*$/, '')
-          .trim();
+        const cleaned = planningResponseContent.replace(/```json\s*/i, '').replace(/```\s*$/, '').trim();
         plan = JSON.parse(cleaned);
         if (!plan.intent || !plan.query) throw new Error("Invalid JSON format from LLM.");
     } catch (e) {
@@ -73,8 +76,9 @@ ${schemaString}`;
     // --- Chemin 2: Gestion des différentes intentions ---
     switch (plan.intent) {
       case 'write':
+      case 'schema_write': {
         return NextResponse.json({ type: 'confirmation', query: plan.query });
-
+      }
       case 'visualize':
         try {
             const queryResult = await executeCypherQuery(plan.query);

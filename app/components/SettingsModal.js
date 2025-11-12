@@ -2,14 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const providers = [
-  { id: 'lmstudio', name: 'LM Studio' },
-  { id: 'mistral', name: 'Mistral' },
-  // { id: 'openai', name: 'OpenAI' },
-  // { id: 'gemini', name: 'Gemini' },
-  // { id: 'claude', name: 'Claude' },
+  { id: 'lmstudio', name: 'LM Studio', requiresKey: false },
+  { id: 'mistral', name: 'Mistral', requiresKey: true },
+  // { id: 'openai', name: 'OpenAI', requiresKey: true },
+  // { id: 'gemini', name: 'Gemini', requiresKey: true },
+  // { id: 'claude', name: 'Claude', requiresKey: true },
+
 ];
+
+const providersRequiringKey = providers
+  .filter(p => p.requiresKey)
+  .map(p => p.id);
 
 const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
   const [tempConfig, setTempConfig] = useState(config);
@@ -21,9 +27,18 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
   }, [config, isOpen]);
 
   const handleSave = () => {
+    if (providersRequiringKey.includes(activeProvider)) {
+      const key = tempConfig[activeProvider]?.apiKey?.trim();
+      if (!key) {
+        toast.error("Vous n'avez pas entré de clé API pour le fournisseur sélectionné.");
+        return;
+      }
+    }
+
     onSave({ ...tempConfig, provider: activeProvider });
     onClose();
   };
+
 
   const handleInputChange = (provider, field, value) => {
     setTempConfig(prev => ({

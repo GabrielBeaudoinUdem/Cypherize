@@ -321,7 +321,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               )}
 
               {msg.type === 'code' && (
-                <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-1.5 py-0 rounded-[6px]' : 'text-white'}`}>
+                <div className={`max-w-[80%] ${msg.sender === 'user' ? 'bg-[#252F36] text-white px-1.5 py-0 rounded-[6px]' : 'rounded-lg p-3 my-2 border border-[#2A3239] text-white'}`}>
                   <SyntaxHighlighter
                     language="cypher"
                     style={tomorrow}
@@ -343,34 +343,44 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                   >
                     {msg.content}
                   </SyntaxHighlighter>
-
                 </div>
               )}
 
               {msg.type === "success" && (
-                <div className="w-full max-w-lg mx-auto">
-                  <div
-                    className="flex items-center justify-between px-0 py-1 transition-all"
-                  >
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-[#34B27B]" />
-                      <span className="font-normal text-[#34B27B] text-sm">Query executed successfully.</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {msg.type === "error" && (
-                <div className="w-full max-w-lg mx-auto">
-                  <div className="flex items-center justify-between px-0 py-1 transition-all">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-[#E45858]" />
-                      <span className="font-normal text-[#E45858] text-sm">
-                        Error : {msg.content}
+                <div className="w-full">
+                  <div className="flex rounded-lg p-2 border-0 border-[#2A3239] w-85 text-white">
+                    <div className="flex items-start gap-2">
+                      {/* Icône toujours en haut */}
+                      <div className="flex-shrink-0 w-5 h-5 flex items-start justify-center pt-0.5">
+                        <CheckCircle className="w-4 h-4 text-[#34B27B]" />
+                      </div>
+
+                      <span className="font-normal text-[#34B27B] text-sm leading-snug">
+                        Query executed successfully.
                       </span>
                     </div>
                   </div>
                 </div>
               )}
+
+              {msg.type === "error" && (
+                <div className="w-full">
+                  <div className="flex rounded-lg p-2 border-0 border-[#2A3239] w-85 text-white">
+                    <div className="flex items-start gap-2">
+                      {/* Icône toujours en haut */}
+                      <div className="flex-shrink-0 w-5 h-5 flex items-start justify-center pt-0.5">
+                        <AlertCircle className="w-4.5 h-4.5 text-[#E45858]" />
+                      </div>
+
+                      <span className="font-normal text-[#E45858] text-sm leading-snug">
+                        Error: {msg.content}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
               {msg.type === 'confirmation' && !msg.content.confirmed && (
                   <div className="w-full">
                       <QueryConfirmation
@@ -381,8 +391,8 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                   </div>
               )}
               {msg.type === 'confirmation' && msg.content.confirmed && (
-                  <div className="w-full my-2">
-                      <div className="bg-[#252F36] rounded-sm p-2 my-2 border-l-4 border-[#34B27B]">
+                  <div className="w-full">
+                      <div className="rounded-lg p-3 py-2 my-2 border border-[#2A3239] w-85 text-white">
                           <SyntaxHighlighter
                             language="cypher"
                             style={tomorrow}

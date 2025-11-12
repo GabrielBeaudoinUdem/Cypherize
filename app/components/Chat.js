@@ -135,9 +135,9 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
     setLoading(false);
   };
 
-  const handleConfirmQuery = async (query) => {
+  const handleConfirmQuery = async (messageId, query) => {
     setMessages(prev => prev.map(m =>
-        m.type === 'confirmation' ? { ...m, content: { ...m.content, confirmed: true, query } } : m
+        m.id === messageId ? { ...m, content: { ...m.content, confirmed: true, query } } : m
     ));
     setLoading(true);
     const wasSuccessful = await handleAiInteraction({ config: aiConfig, confirmedQuery: query });
@@ -396,7 +396,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                   <div className="w-full">
                       <QueryConfirmation
                           query={msg.content.query}
-                          onConfirm={handleConfirmQuery}
+                          onConfirm={(query) => handleConfirmQuery(msg.id, query)}
                           onCancel={() => handleCancelQuery(msg.id)}
                       />
                   </div>

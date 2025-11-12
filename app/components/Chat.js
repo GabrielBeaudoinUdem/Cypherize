@@ -58,7 +58,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
       const result = await response.json();
       if (!response.ok) {
-        console.log(response)
         throw new Error(result.error || "Erreur de l'API AI");
       }
 
@@ -66,9 +65,15 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         addMessage('bot', 'confirmation', { query: result.query });
       } else if (result.type === 'answer') {
         addMessage('bot', 'answer', { text: result.text, query: result.query, data: result.data });
-        if (payload.confirmedQuery) {
-            isSuccess = result.success === true;
-        }
+        isSuccess = result.success === true;
+      } else if (result.type === 'graph') {
+        onQuerySuccess(result.data, result.query);
+        addMessage('bot', 'answer', { 
+          text: "The graph has been updated.", 
+          query: result.query, 
+          data: result.data 
+        });
+        isSuccess = true;
       }
 
     } catch (error) {
@@ -84,17 +89,29 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    setLoading(true)
+    setLoading(true);
 
     addMessage('user', mode, input);
     const queryToSend = input;
     setInput('');
 
     if (mode === 'ai') {
-      // Mode AI
-      await handleAiInteraction({ config: aiConfig, prompt: queryToSend });
+      const history = messages
+        .slice(-6)
+        .filter(m => ['ai', 'code', 'answer'].includes(m.type))
+        .map(m => {
+          let role = m.sender === 'user' ? 'user' : 'assistant';
+          let content = '';
+          if (m.type === 'answer') {
+            content = m.content.text; 
+          } else {
+            content = m.content;
+          }
+          return { role, content };
+        });
+
+      await handleAiInteraction({ config: aiConfig, prompt: queryToSend, history });
     } else {
-      // Mode Code
       setIsLoading(true);
       try {
         const response = await fetch('/api', {
@@ -105,7 +122,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         const data = await response.json();
         if (response.ok) {
           onQuerySuccess(data.result, queryToSend);
-          addMessage('bot', 'success', `\n${JSON.stringify(data.result, null, 2)}`);
+          addMessage('bot', 'success', `Query executed successfully.`);
         } else {
           addMessage('bot', 'error', `${data.error}`);
         }
@@ -115,27 +132,26 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         setIsLoading(false);
       }
     }
-    setLoading(false)
+    setLoading(false);
   };
 
   const handleConfirmQuery = async (query) => {
     setMessages(prev => prev.map(m =>
         m.type === 'confirmation' ? { ...m, content: { ...m.content, confirmed: true, query } } : m
     ));
-
+    setLoading(true);
     const wasSuccessful = await handleAiInteraction({ config: aiConfig, confirmedQuery: query });
 
-    if (wasSuccessful && lastQuery) {
+    if (wasSuccessful) {
+        const queryToRefresh = lastQuery || 'MATCH (n) RETURN n LIMIT 0';
         try {
-            addMessage('bot', 'success', 'Mise à jour du graphe...');
-            const freshResult = await executeQuery(lastQuery);
-            onQuerySuccess(freshResult, lastQuery);
+            const freshResult = await executeQuery(queryToRefresh);
+            onQuerySuccess(freshResult, queryToRefresh);
         } catch (error) {
             addMessage('bot', 'error', `Erreur lors de la mise à jour du graphe: ${error.message}`);
         }
-    } else if (wasSuccessful && !lastQuery) {
-        onQuerySuccess([], '');
     }
+    setLoading(false);
   };
 
   const handleCancelQuery = (messageId) => {
@@ -158,7 +174,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
         onSave={onAiConfigChange}
       />
 
-
       {/* Header */}
       <div className="flex items-center p-4 border-gray-700 bg-[#20282E] gap-3">
         <SettingsButton onClick={() => setIsSettingsOpen(true)} />
@@ -178,7 +193,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                           motion-reduce:transition-none
                           ${mode === 'code' ? 'translate-x-full' : 'translate-x-0'}`}
             />
-
             <div className="grid grid-cols-2 h-full relative z-10">
               <button
                 type="button"
@@ -193,7 +207,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
               >
                 AI
               </button>
-
               <button
                 type="button"
                 onClick={() => setMode('code')}
@@ -354,9 +367,8 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                       <div className="flex-shrink-0 w-5 h-5 flex items-start justify-center pt-0.5">
                         <CheckCircle className="w-4 h-4 text-[#34B27B]" />
                       </div>
-
                       <span className="font-normal text-[#34B27B] text-sm leading-snug">
-                        Query executed successfully.
+                        {msg.content}
                       </span>
                     </div>
                   </div>
@@ -371,7 +383,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                       <div className="flex-shrink-0 w-5 h-5 flex items-start justify-center pt-0.5">
                         <AlertCircle className="w-4.5 h-4.5 text-[#E45858]" />
                       </div>
-
                       <span className="font-normal text-[#E45858] text-sm leading-snug">
                         Error: {msg.content}
                       </span>
@@ -475,7 +486,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
         <div className="my-1 text-[11px] text-zinc-400/50 text-center">
               {(inputWarning == 0) && ( <>Cypherize can make mistakes. Please check answers.</> )}
-
               { (inputWarning == 1) && (
                 <>
                   That looks like Cypher...
@@ -487,7 +497,6 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
                   </span>
                 </>
               ) }
-
               { (inputWarning == 2) && (
                 <>
                   That doesn't look like Cypher...

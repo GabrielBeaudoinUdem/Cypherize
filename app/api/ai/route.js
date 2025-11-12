@@ -148,21 +148,33 @@ async function callLLM(config, messages) {
     }
 }
 
-
 export async function POST(request) {
   try {
-    const { config, prompt, confirmedQuery } = await request.json();
+    const { config, prompt, confirmedQuery, history } = await request.json();
 
     if (!config || !config.provider) {
       return NextResponse.json({ error: 'AI provider configuration is missing.' }, { status: 400 });
     }
 
+    // --- Chemin 1: Exécution d'une requête d'écriture confirmée ---
     if (confirmedQuery) {
         try {
-            await executeCypherQuery(confirmedQuery);
-            return NextResponse.json({ type: 'none', text: "The modification was successful.", success: true });
+            const writeResult = await executeCypherQuery(confirmedQuery);
+            return NextResponse.json({ 
+                type: 'answer', 
+                text: "The modification was successful.",
+                query: confirmedQuery,
+                data: writeResult,
+                success: true 
+            });
         } catch(e) {
-            return NextResponse.json({ type: 'error', text: `${e.message}`, success: false });
+            return NextResponse.json({ 
+                type: 'answer', 
+                text: `An error occurred: ${e.message}`,
+                query: confirmedQuery,
+                data: null,
+                success: false 
+            });
         }
     }
 
@@ -173,17 +185,20 @@ export async function POST(request) {
     const dbSchema = await getDbSchema();
     const schemaString = JSON.stringify(dbSchema, null, 2);
 
-    const planningMessages = [
-      {
-        role: 'system',
-        content: `You are a Cypher expert for a Kuzu database. Analyze the user's request and the provided database schema.
-Respond ONLY with a JSON object containing two keys:
-1. "intent": "read" if the user is asking for information, or "write" if the user wants to create, modify, or delete data.
-2. "query": The complete Cypher query to accomplish the task.
+    const systemPrompt = `You are a Cypher expert for a Kuzu database. Your task is to analyze the user's request and the database schema to decide on the correct action.
+Respond ONLY with a JSON object with two keys: "intent" and "query".
+
+Possible values for "intent":
+1. "visualize": If the user wants to SEE or DISPLAY data on the graph. (e.g., "Show me all actors", "Find movies released after 2020"). The result will directly update the graph view.
+2. "read": If the user asks a question that requires a textual answer based on data. (e.g., "How many actors are there?", "What is the average movie budget?"). The result will be used to formulate a natural language response.
+3. "write": If the user wants to CREATE, MODIFY, or DELETE data. (e.g., "Create a new person named John", "Delete the movie 'The Matrix'"). This action will require confirmation.
 
 Database Schema:
-${schemaString}`
-      },
+${schemaString}`;
+
+    const planningMessages = [
+      { role: 'system', content: systemPrompt },
+      ...(history || []),
       { role: 'user', content: prompt }
     ];
 
@@ -194,45 +209,48 @@ ${schemaString}`
           .replace(/```json\s*/i, '')
           .replace(/```\s*$/, '')
           .trim();
-
         plan = JSON.parse(cleaned);
-
-        if (!plan.intent || !plan.query)
-            throw new Error("Invalid JSON format from LLM.");
+        if (!plan.intent || !plan.query) throw new Error("Invalid JSON format from LLM.");
     } catch (e) {
         console.error("Error parsing LLM planning response:", e, `\nContent: ${planningResponseContent}`);
-        return NextResponse.json({
-            type: 'answer',
-            text: "Sorry, I couldn't generate a valid query. Please try rephrasing.",
-            success: false
-        });
-    }
-    if (plan.intent === 'write') {
-      return NextResponse.json({ type: 'confirmation', query: plan.query });
+        return NextResponse.json({ type: 'answer', text: "Sorry, I couldn't generate a valid query. Please try rephrasing.", success: false });
     }
 
-    if (plan.intent === 'read') {
-      let queryResult;
-      try {
-          queryResult = await executeCypherQuery(plan.query);
-      } catch (e) {
-          return NextResponse.json({ type: 'answer', text: `I tried to execute a query, but an error occurred: ${e.message}`, success: false });
-      }
+    // --- Chemin 2: Gestion des différentes intentions ---
+    switch (plan.intent) {
+      case 'write':
+        return NextResponse.json({ type: 'confirmation', query: plan.query });
 
-      const finalAnswerMessages = [
-        {
-          role: 'system',
-          content: "You are a helpful assistant. Based on the user's original question and the following JSON data, provide a clear and concise answer in natural language. Do not show the JSON data to the user."
-        },
-        { role: 'user', content: `My question was: "${prompt}"\n\nHere is the data obtained:\n${JSON.stringify(queryResult, null, 2)}` }
-      ];
+      case 'visualize':
+        try {
+            const queryResult = await executeCypherQuery(plan.query);
+            return NextResponse.json({ type: 'graph', query: plan.query, data: queryResult, success: true });
+        } catch (e) {
+            return NextResponse.json({ type: 'answer', text: `I tried to execute a query for visualization, but an error occurred: ${e.message}`, success: false });
+        }
 
-      const answerText = await callLLM(config, finalAnswerMessages) || "I was unable to formulate a response.";
+      case 'read':
+        let queryResultForRead;
+        try {
+            queryResultForRead = await executeCypherQuery(plan.query);
+        } catch (e) {
+            return NextResponse.json({ type: 'answer', text: `I tried to execute a query, but an error occurred: ${e.message}`, success: false });
+        }
 
-      return NextResponse.json({ type: 'answer', text: answerText, query: plan.query, data: queryResult, success: true });
+        const finalAnswerMessages = [
+          {
+            role: 'system',
+            content: "You are a helpful assistant. Based on the user's original question and the following JSON data from the database, provide a clear and concise answer in natural language. Do not show the JSON data to the user. If the data is empty, say so."
+          },
+          { role: 'user', content: `My question was: "${prompt}"\n\nHere is the data obtained:\n${JSON.stringify(queryResultForRead, null, 2)}` }
+        ];
+
+        const answerText = await callLLM(config, finalAnswerMessages) || "I was unable to formulate a response.";
+        return NextResponse.json({ type: 'answer', text: answerText, query: plan.query, data: queryResultForRead, success: true });
+
+      default:
+        return NextResponse.json({ type: 'answer', text: `Unrecognized intent: ${plan.intent}`, success: false });
     }
-
-    return NextResponse.json({ type: 'answer', text: `Unrecognized intent: ${plan.intent}`, success: false });
 
   } catch (error) {
     console.error("Internal error in /api/ai:", error);

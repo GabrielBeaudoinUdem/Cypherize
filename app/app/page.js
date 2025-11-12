@@ -54,23 +54,27 @@ export default function Home() {
   const [chatInput, setChatInput] = useState("");
   const [lastQuery, setLastQuery] = useState("");
   const [aiConfig, setAiConfig] = useState({
-    provider: 'lmstudio', // 'lmstudio', 'openai', 'gemini', 'claude'
+    provider: 'lmstudio', // 'lmstudio', 'mistral' 'openai', 'gemini', 'claude'
     lmstudio: {
       url: "http://localhost:1234/v1/chat/completions",
       model: "mistralai/devstral-small-2507",
     },
-    openai: {
+    mistral: {
       apiKey: "",
-      model: "gpt-5-mini",
+      model: "devstral-medium-2507",
     },
-    gemini: {
-      apiKey: "",
-      model: "gemini-2.5-pro",
-    },
-    claude: {
-      apiKey: "",
-      model: "claude-opus-4",
-    }
+    // openai: {
+    //   apiKey: "",
+    //   model: "gpt-5-mini",
+    // },
+    // gemini: {
+    //   apiKey: "",
+    //   model: "gemini-2.5-pro",
+    // },
+    // claude: {
+    //   apiKey: "",
+    //   model: "claude-opus-4-1-20250805",
+    // }
   });
   const [ghost, setGhost] = useState({ visible: false, x: 0, y: 0, kind: null, label: '' });
   const dragRef = useRef(null);
@@ -85,9 +89,10 @@ export default function Home() {
           ...prevConfig,
           ...parsedConfig,
           lmstudio: { ...prevConfig.lmstudio, ...parsedConfig.lmstudio },
-          openai: { ...prevConfig.openai, ...parsedConfig.openai },
-          gemini: { ...prevConfig.gemini, ...parsedConfig.gemini },
-          claude: { ...prevConfig.claude, ...parsedConfig.claude },
+          mistral: { ...prevConfig.mistral, ...parsedConfig.mistral },
+          // openai: { ...prevConfig.openai, ...parsedConfig.openai },
+          // gemini: { ...prevConfig.gemini, ...parsedConfig.gemini },
+          // claude: { ...prevConfig.claude, ...parsedConfig.claude },
         }));
       }
     } catch (error) {

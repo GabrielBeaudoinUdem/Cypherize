@@ -5,9 +5,10 @@ import { CheckCircle } from 'lucide-react';
 
 const providers = [
   { id: 'lmstudio', name: 'LM Studio' },
-  { id: 'openai', name: 'OpenAI' },
-  { id: 'gemini', name: 'Gemini' },
-  { id: 'claude', name: 'Claude' },
+  { id: 'mistral', name: 'Mistral' },
+  // { id: 'openai', name: 'OpenAI' },
+  // { id: 'gemini', name: 'Gemini' },
+  // { id: 'claude', name: 'Claude' },
 ];
 
 const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
@@ -59,9 +60,10 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
             </div>
           </>
         );
-      case 'openai':
-      case 'gemini':
-      case 'claude':
+      case 'mistral':
+      // case 'openai':
+      // case 'gemini':
+      // case 'claude':
         const providerConfig = tempConfig[activeProvider];
         return (
            <>

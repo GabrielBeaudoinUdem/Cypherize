@@ -71,7 +71,7 @@ CREATE (n:AllTypesNode {
 
 
 
-// OpenAI a été cofondée en 2015 par Sam Altman, Elon Musk et plusieurs chercheurs, dans le but de développer une intelligence artificielle bénéfique et ouverte à tous. Musk a ensuite quitté le projet, notamment en raison de désaccords sur la direction prise par l’entreprise. OpenAI est aujourd’hui connue pour ses modèles GPT.
-// Anthropic, fondée par d’anciens membres d’OpenAI, dont Dario Amodei, développe le modèle Claude, souvent vu comme un concurrent direct de ChatGPT.
-// Du côté académique, Geoffrey Hinton, Yoshua Bengio et Yann LeCun (souvent appelés les “pères du deep learning”) ont jeté les bases de l’IA moderne. Hinton a longtemps travaillé chez Google, Bengio dirige le Mila à Montréal, et LeCun est aujourd’hui directeur scientifique de l’IA chez Meta (Facebook).
-// Ainsi, ces figures et entreprises forment un réseau étroit : les chercheurs académiques ont conçu les fondements théoriques, tandis que des organisations comme OpenAI, Anthropic, Google et Meta en ont fait des applications concrètes.
+OpenAI a été cofondée en 2015 par Sam Altman, Elon Musk et plusieurs chercheurs, dans le but de développer une intelligence artificielle bénéfique et ouverte à tous. Musk a ensuite quitté le projet, notamment en raison de désaccords sur la direction prise par l’entreprise. OpenAI est aujourd’hui connue pour ses modèles GPT.
+Anthropic, fondée par d’anciens membres d’OpenAI, dont Dario Amodei, développe le modèle Claude, souvent vu comme un concurrent direct de ChatGPT.
+Du côté académique, Geoffrey Hinton, Yoshua Bengio et Yann LeCun (souvent appelés les “pères du deep learning”) ont jeté les bases de l’IA moderne. Hinton a longtemps travaillé chez Google, Bengio dirige le Mila à Montréal, et LeCun est aujourd’hui directeur scientifique de l’IA chez Meta (Facebook).
+Ainsi, ces figures et entreprises forment un réseau étroit : les chercheurs académiques ont conçu les fondements théoriques, tandis que des organisations comme OpenAI, Anthropic, Google et Meta en ont fait des applications concrètes.

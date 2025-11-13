@@ -48,6 +48,24 @@ const GraphView = dynamic(
 
 const AI_CONFIG_STORAGE_KEY = 'cypherize-ai-config';
 
+function findBestMatchProperty(properties) {
+  if (!properties) return null;
+  if (properties.id !== undefined && properties.id !== null) {
+    return { key: 'id', value: properties.id };
+  }
+  if (properties.name !== undefined && properties.name !== null) {
+    return { key: 'name', value: properties.name };
+  }
+  if (properties.title !== undefined && properties.title !== null) {
+    return { key: 'title', value: properties.title };
+  }
+  const firstProp = Object.entries(properties).find(([, val]) => val !== null && val !== '');
+  if (firstProp) {
+    return { key: firstProp[0], value: firstProp[1] };
+  }
+  return null;
+}
+
 export default function Home() {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
   const [selectedElement, setSelectedElement] = useState(null);
@@ -115,8 +133,8 @@ export default function Home() {
   };
 
 
-  const handleGraphDragStart = ({ id, label }) => {
-    dragRef.current = { id, label };
+  const handleGraphDragStart = ({ id, label, kuzuData }) => {
+    dragRef.current = { id, label, kuzuData };
     document.body.classList.add('cursor-grabbing');
     setGhost({ visible: true, x: 0, y: 0, label: label, id: id });
   };
@@ -124,7 +142,7 @@ export default function Home() {
   const handleGraphDragEnd = (e) => {
     document.body.classList.remove('cursor-grabbing');
     const payload = dragRef.current;
-    if (!payload) return;
+    if (!payload || !payload.kuzuData) return;
 
     const clientX = e.client.x;
     const clientY = e.client.y;
@@ -142,8 +160,27 @@ export default function Home() {
       clientY <= rect.bottom;
 
     if (inside) {
-      const token = `@[${payload.label}](${payload.id})`;
-      setChatInput(prev => (prev ? `${prev} ${token}` : token));
+      const { kuzuData, label: displayLabel } = payload;
+      const bestProp = findBestMatchProperty(kuzuData.properties);
+
+      if (bestProp) {
+        const tableLabel = kuzuData.label_type;
+        const propKey = bestProp.key;
+        const propValue = bestProp.value;
+        
+        const formattedValue = typeof propValue === 'string' 
+          ? `'${propValue.replace(/'/g, "\\'")}'` 
+          : propValue;
+        
+        const match_clause = `MATCH (p:${tableLabel} {${propKey}: ${formattedValue}})`;
+        
+        const token = `@[${displayLabel}](${match_clause}`;
+        
+        setChatInput(prev => (prev ? `${prev} ${token}` : token));
+      } else {
+        const token = `@[${payload.label}](${payload.id})`;
+        setChatInput(prev => (prev ? `${prev} ${token}` : token));
+      }
     }
 
     dragRef.current = null;

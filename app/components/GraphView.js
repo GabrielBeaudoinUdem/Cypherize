@@ -77,10 +77,15 @@ const GraphView = ({ data, onElementClick, onDragStart, onDragEnd, onDragMove, l
     graphRef.current.on('edge:click', handleEdgeClick);
     graphRef.current.on('node:dragstart', (e) => {
       const id = e.target?.id;
-      const label = e.target?.attributes?.labelText;
-      if (onDragStart) {
-        onDragStart({ id, label });
-        addGlobalMove()
+      const nodeData = graphRef.current.getNodeData(id); 
+
+      if (onDragStart && nodeData) {
+        onDragStart({ 
+          id, 
+          label: nodeData.label, 
+          kuzuData: nodeData.kuzuData 
+        });
+        addGlobalMove();
       }
     });
 

@@ -48,11 +48,6 @@ Respond ONLY with a JSON object with two keys: "intent" and "query".
 3. "write": If the user wants to CREATE, MODIFY, or DELETE DATA (nodes or relationships).
 4. "schema_write": If the user wants to modify the SCHEMA (e.g., "Create a new table for Companies").
 
---- CRITICAL RULE ---
-Whenever you generate a 'CREATE NODE TABLE' or 'CREATE REL TABLE' query, you MUST include an 'id' column defined as 'SERIAL' and set it as the 'PRIMARY KEY'. This is mandatory for all new tables.
-- Example for a NODE table: CREATE NODE TABLE Person(id SERIAL, name STRING, PRIMARY KEY (id))
-- Example for a REL table: CREATE REL TABLE KNOWS(FROM Person TO Person, since DATE, id SERIAL, PRIMARY KEY (id))
-
 --- DATABASE SCHEMA CONTEXT ---
 ${schemaString}`;
 
@@ -76,8 +71,36 @@ ${schemaString}`;
     // --- Chemin 2: Gestion des différentes intentions ---
     switch (plan.intent) {
       case 'write':
-      case 'schema_write': {
+      {
         return NextResponse.json({ type: 'confirmation', query: plan.query });
+      }
+      case 'schema_write': {
+        const validationPrompt = `
+      You are a Cypher expert. Check the following CREATE TABLE query:
+      "${plan.query}"
+
+      --- CRITICAL RULE ---
+      Whenever you generate a 'CREATE NODE TABLE' or 'CREATE REL TABLE' query, you MUST include an 'id' column defined as 'SERIAL' and set it as the 'PRIMARY KEY'. This is mandatory for all new tables.
+      - Example for a NODE table: CREATE NODE TABLE Person(id SERIAL, name STRING, PRIMARY KEY (id))
+      - Example for a REL table: CREATE REL TABLE KNOWS(FROM Person TO Person, since DATE, id SERIAL, PRIMARY KEY (id))
+
+      If the query does not comply with this rule, rewrite it so that it does otherwise just give it back. Respond ONLY with the corrected Cypher query, no more explanation just the query.
+      `;
+        let validatedQuery;
+        try {
+          validatedQuery = await callLLM(config, [
+            { role: 'system', content: validationPrompt }
+          ]);
+          validatedQuery = validatedQuery.replace(/```cypher\s*/i, '').replace(/```/g, '').trim();
+        } catch (e) {
+          console.error("Error validating schema query:", e);
+          return NextResponse.json({ 
+            type: 'answer', 
+            text: "Failed to validate the schema query. Please check the syntax.", 
+            success: false 
+          });
+        }
+        return NextResponse.json({ type: 'confirmation', query: validatedQuery });
       }
       case 'visualize':
         try {

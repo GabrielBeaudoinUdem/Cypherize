@@ -150,7 +150,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
             const freshResult = await executeQuery(queryToRefresh);
             onQuerySuccess(freshResult, queryToRefresh);
         } catch (error) {
-            addMessage('bot', 'error', `Erreur lors de la mise à jour du graphe: ${error.message}`);
+            addMessage('bot', 'error', `Error updating the graph: ${error.message}`);
         }
     }
     setLoading(false);
@@ -158,7 +158,7 @@ const Chat = ({ onQuerySuccess, externalInput, setExternalInput, aiConfig, onAiC
 
   const handleCancelQuery = (messageId) => {
       setMessages(prev => prev.filter(m => m.id !== messageId));
-      addMessage('bot', 'text', 'Opération annulée.');
+      addMessage('bot', 'text', 'Operation canceled.');
   };
 
   function transformMentions(msg) {

@@ -4,7 +4,7 @@ import React, { useRef, useEffect } from 'react';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
-const EditableSyntaxHighlighter = ({ value, onChange, language = 'cypher', disabled = false }) => {
+const EditableSyntaxHighlighter = ({ value, onChange, language = 'cypher', disabled = false, className, placeholder, customSharedStyles = {} }) => {
   const textareaRef = useRef(null);
   const preRef = useRef(null);
 
@@ -15,7 +15,7 @@ const EditableSyntaxHighlighter = ({ value, onChange, language = 'cypher', disab
     }
   };
 
-  const sharedStyles = {
+  const baseSharedStyles = {
     margin: 0,
     padding: '12px', 
     fontFamily: 'monospace',
@@ -26,8 +26,18 @@ const EditableSyntaxHighlighter = ({ value, onChange, language = 'cypher', disab
     overflow: 'auto',
   };
 
+  const sharedStyles = { ...baseSharedStyles, ...customSharedStyles };
+
   return (
-    <div className="relative w-full h-48 rounded-md bg-[#252F36] border border-[#2A3239] focus-within:ring-2 focus-within:ring-[#34B27B]/50 overflow-hidden">
+    <div className={`relative w-full rounded-md bg-[#252F36] border border-[#2A3239] focus-within:ring-2 focus-within:ring-[#34B27B]/50 overflow-hidden ${className || 'h-48'}`}>
+      {!value && placeholder && (
+        <div 
+          className="absolute top-0 left-0 text-zinc-500 pointer-events-none z-10"
+          style={{ ...sharedStyles, overflow: 'hidden' }} // Apply same styles to align placeholder
+        >
+          {placeholder}
+        </div>
+      )}
       <textarea
         ref={textareaRef}
         value={value}
@@ -42,7 +52,7 @@ const EditableSyntaxHighlighter = ({ value, onChange, language = 'cypher', disab
           left: 0,
           width: '100%',
           height: '100%',
-          zIndex: 1,
+          zIndex: 2,
           color: 'transparent',
           caretColor: 'white',
           backgroundColor: 'transparent',

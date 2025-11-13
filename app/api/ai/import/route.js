@@ -20,13 +20,15 @@ export async function POST(request) {
     // --- Étape : Génération du schéma ---
     if (step === 'generate_schema') {
         const criticalRule = `--- CRITICAL RULES FOR KUZU SCHEMA ---
-1.  **Output Format**: Respond ONLY with the Cypher DDL queries. Do not add any explanations, markdown, or comments unless specified.
-2.  **Mandatory Columns**: Every new table (NODE or REL) MUST include 'id SERIAL' and 'PRIMARY KEY (id)'. This is non-negotiable.
-3.  **Relationship Syntax**: For REL tables, you MUST use the 'FROM TableName TO TableName' syntax. DO NOT use SQL-like 'REFERENCES' syntax.
-4.  **Data Types**: You MUST use Kuzu-native data types. For text, use 'STRING'. Do NOT use 'VARCHAR', 'TEXT', or any other SQL types. Other valid types include INT64, DOUBLE, BOOLEAN, DATE.
-5.  **REL TABLE Constraint**: The table names used in the 'FROM' and 'TO' clauses of a REL TABLE MUST refer to NODE TABLE names defined in the same output. Do not invent or reference tables that do not exist in your response.
+1.  **Output Format**: Respond ONLY with the Cypher DDL queries. Do not add any explanations, markdown, or comments.
+2.  **NODE Table Columns**: Every new NODE table MUST include 'id SERIAL' and 'PRIMARY KEY (id)'.
+3.  **REL Table Columns**: REL tables define connections. They do NOT need an 'id' or a 'PRIMARY KEY'. You MUST NOT add 'id SERIAL' or 'PRIMARY KEY (id)' to REL tables.
+4.  **Relationship Syntax**: For REL tables, you MUST use the 'FROM TableName TO TableName' syntax. DO NOT use SQL-like 'REFERENCES'.
+5.  **Data Types**: You MUST use Kuzu-native data types. For text, use 'STRING'. Do NOT use 'VARCHAR' or 'TEXT'. Other valid types include INT64, DOUBLE, BOOLEAN, DATE.
+6.  **REL TABLE Constraint**: The table names used in the 'FROM' and 'TO' clauses of a REL TABLE MUST refer to NODE TABLE names defined in the same output.
+
 - Correct NODE Table Example: CREATE NODE TABLE Person(id SERIAL, name STRING, PRIMARY KEY (id));
-- Correct REL Table Example: CREATE REL TABLE KNOWS(FROM Person TO Person, since DATE, id SERIAL, PRIMARY KEY (id));`;
+- Correct REL Table Example: CREATE REL TABLE KNOWS(FROM Person TO Person, since DATE);`;
 
         let systemPrompt = '';
         if (importMode === 'append') {
@@ -52,7 +54,6 @@ ${criticalRule}`;
             const llmResponse = await callLLM(config, messages);
             const cleanedResponse = cleanLlmResponse(llmResponse);
             
-            // Si la réponse est vide (cas valide pour 'append'), on arrête.
             if (cleanedResponse.trim() === '' || cleanedResponse.trim().startsWith('--')) {
                 finalSchema = '';
                 isValid = true;
@@ -66,7 +67,7 @@ ${criticalRule}`;
             } else {
                 console.warn(`Attempt ${i + 1} failed validation. Retrying...`);
                 messages.push({role: 'assistant', content: cleanedResponse});
-                messages.push({role: 'user', content: 'The schema you provided is invalid. Please strictly follow all the critical rules and provide a corrected version.'});
+                messages.push({role: 'user', content: 'The schema you provided is invalid. Please strictly follow all the critical rules, especially the different rules for NODE and REL tables, and provide a corrected version.'});
             }
         }
 
@@ -88,7 +89,7 @@ ${criticalRule}`;
 3.  **Relationship Creation**: To create relationships, you MUST use the 'MATCH (a:Label), MATCH (b:Label), MERGE (a)-[:REL]->(b)' pattern in the same query. This is mandatory to avoid scope errors.
 
 --- CORRECT PATTERN for relationships ---
-MATCH (n:Organization {name: 'open ai'}), (m:Model {name: 'gpt'}) CREATE (n)-[:DEVELOPED]->(m);`;
+MATCH (a:Person {name: 'Sam Altman'}) MATCH (b:Organization {name: 'OpenAI'}) MERGE (a)-[:FOUNDED_BY]->(b);`;
 
         const userContent = `SCHEMA:\n\`\`\`cypher\n${schema}\n\`\`\`\n\nDOCUMENT:\n---\n${documentText}\n---`;
         const messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: userContent }];
@@ -121,8 +122,7 @@ MATCH (n:Organization {name: 'open ai'}), (m:Model {name: 'gpt'}) CREATE (n)-[:D
 
     return NextResponse.json({ error: 'Invalid step provided.' }, { status: 400 });
 
-  } catch (error)
- {
+  } catch (error) {
     console.error("Error in /api/ai/import:", error);
     return NextResponse.json({ error: error.message || "Error communicating with the AI service." }, { status: 500 });
   }

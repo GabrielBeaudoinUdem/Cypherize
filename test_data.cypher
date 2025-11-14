@@ -68,8 +68,9 @@ CREATE (n:AllTypesNode {
 
 // MATCH (n:AllTypesNode) RETURN n
 
-
-
+OpenAI a été cofondée en 2015 par Sam Altman, Elon Musk
+Elon Musk à fondé Xai en 2023.
+OpenAI est aujourd’hui connue pour ses modèles GPT. Anthropic, fondée par d’anciens membres d’OpenAI, dont Dario Amodei, développe le modèle Claude.
 
 // OpenAI a été cofondée en 2015 par Sam Altman, Elon Musk et plusieurs chercheurs, dans le but de développer une intelligence artificielle bénéfique et ouverte à tous. Musk a ensuite quitté le projet, notamment en raison de désaccords sur la direction prise par l’entreprise. OpenAI est aujourd’hui connue pour ses modèles GPT.
 // Anthropic, fondée par d’anciens membres d’OpenAI, dont Dario Amodei, développe le modèle Claude, souvent vu comme un concurrent direct de ChatGPT.

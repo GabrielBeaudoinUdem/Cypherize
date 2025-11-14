@@ -67,7 +67,7 @@ ${criticalRule}`;
             const cleanedResponse = cleanLlmResponse(llmResponse);
             const reorderedSchema = reorderSchemaQueries(cleanedResponse);
             if (validateSchemaCypher(reorderedSchema)) {
-                finalSchema = reorderedSchema;
+                finalSchema = reorderedSchema + ";";
                 break;
             }
         }
@@ -111,7 +111,7 @@ ${criticalRule}`;
 
         const systemPrompt = `You are a Kuzu data specialist. You will be given a schema, an original document, and Cypher queries that were used to create nodes. 
 **Assume these nodes now exist in the database.**
-Your only task is to write the relationship queries to connect them based on the information in the original document.
+Your only task is to write the relationship queries to connect them based on the information in the original document. If no relationships are needed, respond with an empty string.
 
 --- CRITICAL RULES FOR RELATIONSHIP QUERIES ---
 1.  **Output Format**: Respond ONLY with the Cypher queries. No explanations or markdown. Each statement MUST end with a semicolon ';'.
@@ -135,14 +135,7 @@ MATCH (a:Person {name: 'Alice'}) MATCH (b:Company {name: 'Acme Corp'}) MERGE (a)
         for (let i = 0; i < MAX_RETRIES; i++) {
             const llmResponse = await callLLM(config, messages);
             const cleanedResponse = cleanLlmResponse(llmResponse);
-            if (validateRelationshipCypher(cleanedResponse)) {
-                finalQueries = cleanedResponse;
-                break;
-            }
-            if (i === MAX_RETRIES - 1) {
-                console.warn("Relationship validation failed after retries. Returning last attempt.");
-                finalQueries = cleanedResponse;
-            }
+            finalQueries = cleanedResponse;
         }
         return NextResponse.json({ queries: finalQueries });
     }

@@ -129,7 +129,7 @@ export default function MentionTextarea({
                 data={dataProvider}
                 appendSpaceOnAdd
                 displayTransform={(id, display) => `#${display}`}
-                markup="#[__display__](__id__)"
+                markup="MATCH (n:__display__)" 
                 style={{backgroundColor:'rgba(52, 178, 123, 0.3)',color: 'transparent',borderRadius: 3}}
                 renderSuggestion={(entry, _search, highlighted) => (
                     <div className="flex flex-col-reverse gap-2">

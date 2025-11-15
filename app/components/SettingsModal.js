@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const providers = [
-  { id: 'lmstudio', name: 'LM Studio' },
-  { id: 'openai', name: 'OpenAI' },
-  { id: 'gemini', name: 'Gemini' },
-  { id: 'claude', name: 'Claude' },
+  { id: 'lmstudio', name: 'LM Studio', requiresKey: false },
+  { id: 'mistral', name: 'Mistral', requiresKey: true },
+  // { id: 'openai', name: 'OpenAI', requiresKey: true },
+  // { id: 'gemini', name: 'Gemini', requiresKey: true },
+  // { id: 'claude', name: 'Claude', requiresKey: true },
+
 ];
+
+const providersRequiringKey = providers
+  .filter(p => p.requiresKey)
+  .map(p => p.id);
 
 const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
   const [tempConfig, setTempConfig] = useState(config);
@@ -20,9 +27,18 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
   }, [config, isOpen]);
 
   const handleSave = () => {
+    if (providersRequiringKey.includes(activeProvider)) {
+      const key = tempConfig[activeProvider]?.apiKey?.trim();
+      if (!key) {
+        toast.error("Vous n'avez pas entré de clé API pour le fournisseur sélectionné.");
+        return;
+      }
+    }
+
     onSave({ ...tempConfig, provider: activeProvider });
     onClose();
   };
+
 
   const handleInputChange = (provider, field, value) => {
     setTempConfig(prev => ({
@@ -59,9 +75,10 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
             </div>
           </>
         );
-      case 'openai':
-      case 'gemini':
-      case 'claude':
+      case 'mistral':
+      // case 'openai':
+      // case 'gemini':
+      // case 'claude':
         const providerConfig = tempConfig[activeProvider];
         return (
            <>
@@ -94,7 +111,6 @@ const SettingsModal = ({ isOpen, onClose, config, onSave }) => {
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${isOpen ? 'opacity-100 bg-[rgba(17,24,28,0.8)] backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`}
-      onClick={onClose}
     >
       <div
         className={`w-full max-w-md mx-4 p-6 rounded-lg border shadow-xl transform transition-all duration-300 bg-[#1A2127] border-[#2A3239] ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}

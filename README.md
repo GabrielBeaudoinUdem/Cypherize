@@ -2,7 +2,7 @@
 
   
 
-<img src="./logo.png" alt="logo" width="450" height="auto" />
+<img src="./logo.png" alt="logo" width="500" height="auto" />
 
   
   **Graph exploration using natural language and direct manipulation.**
@@ -26,7 +26,6 @@ Cypherize’s core innovation lies in its **hybrid interface**: it combines the 
 - **✅ Interactive Visualization:** Navigate complex networks with a dynamic, visual interface.
 - **✅ Expert Mode:** Execute raw Cypher queries directly for granular control over your data.
 - **And much more...**
----
 
 
 
@@ -41,7 +40,7 @@ Cypherize’s core innovation lies in its **hybrid interface**: it combines the 
 > **💡 AI Recommendation:**
 > While Cypherize supports various providers, we recommend using the Devstral 24B model via Mistral or locally cause we have extensively tested this model.
 
----
+
 
 ## 💻 Installation & Getting Started
 
@@ -56,8 +55,6 @@ Cypherize’s core innovation lies in its **hybrid interface**: it combines the 
     *   **Option B: Cloud (Recommended for Performance)**
         *   Use the [Mistral AI API](https://console.mistral.ai/).
         *   *Note: You can easily generate a free API key on their platform to test the application.*
-
----
 
 ### 1. Clone the project
 

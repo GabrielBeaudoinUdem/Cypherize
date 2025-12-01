@@ -5,7 +5,7 @@
 <img src="./logo.png" alt="logo" width="500" height="auto" />
 
   
-  **Graph exploration using natural language and direct manipulation.**
+  _Graph exploration using natural language and direct manipulation._
 
 </div>
 

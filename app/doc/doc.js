@@ -14,32 +14,25 @@ export const docData = [
     "mediaSrc": "/doc/exempleImage.png"
   },
   {
-    "id": "hybrid-interaction",
-    "title": "Hybrid Chat",
-    "description": "The system supports dual interaction. You can chat in natural language for fluid exploration or switch to Cypher mode to execute precise technical queries. The system attempts to interpret your intent automatically.",
-    "mediaType": "video",
-    "mediaSrc": "/doc/hybridChat.mov"
-  },
-  {
     "id": "smart-mentions",
     "title": "Contextual Mentions",
     "description": "Guide the AI by specifying context. Use the '@' symbol to target a specific node or relationship (e.g., @MyFile), and '#' to designate an element type (e.g., #User). This allows the AI to correctly identify entities in the graph.",
-    "mediaType": "image",
-    "mediaSrc": "/doc/mentions.png"
+    "mediaType": "video",
+    "mediaSrc": "/doc/2.mov"
   },
   {
     "id": "drag-and-drop",
     "title": "Drag and Drop",
     "description": "To mention an element even faster, you can drag a node directly from the visualization into the chat input. This automatically adds it to the context of your next question.",
     "mediaType": "video",
-    "mediaSrc": "/doc/dragAndDrop.mov"
+    "mediaSrc": "/doc/dragdrop.mp4"
   },
   {
     "id": "ai-import-pipeline",
     "title": "Structured AI Import",
     "description": "Document import follows a rigorous three-step pipeline: 1) Schema Creation, 2) Nodes Creation, 3) Relationships Creation. You validate each step to ensure the generated graph perfectly matches your expectations without hallucinations.",
-    "mediaType": "video",
-    "mediaSrc": "/doc/importPipeline.mov"
+    "mediaType": "image",
+    "mediaSrc": "/doc/importai.png"
   },
   {
     "id": "transparency",
@@ -49,24 +42,24 @@ export const docData = [
     "mediaSrc": "/doc/transparency.png"
   },
   {
-    "id": "safety-confirmation",
-    "title": "Modification Validation",
-    "description": "No destructive modification (add, edit, delete) is performed without your agreement. The system presents the planned action and waits for your explicit confirmation before touching the database.",
-    "mediaType": "image",
-    "mediaSrc": "/doc/safetyConfirm.png"
-  },
-  {
     "id": "direct-graph-edit",
     "title": "Direct Graph Editing",
     "description": "The graph is interactive: simply click on a node or an edge to open the edit menu and modify its properties without going through the chat.",
-    "mediaType": "video",
-    "mediaSrc": "/doc/directEdit.mov"
+    "mediaType": "image",
+    "mediaSrc": "/doc/update.png"
   },
   {
     "id": "mode-feedback",
     "title": "Mode Error Detection",
     "description": "To avoid confusion, real-time analysis (regex) immediately alerts you if you attempt to write Cypher code while in Natural Language mode, and vice versa.",
     "mediaType": "image",
-    "mediaSrc": "/doc/modeFeedback.png"
-  }
+    "mediaSrc": "/doc/switchmode.png"
+  },
+    {
+    "id": "hybrid-interaction",
+    "title": "Hybrid Chat",
+    "description": "The system supports dual interaction. You can chat in natural language for fluid exploration or switch to Cypher mode to execute precise technical queries. The system attempts to interpret your intent automatically.",
+    "mediaType": "image",
+    "mediaSrc": "/doc/mode.png"
+  },
 ];

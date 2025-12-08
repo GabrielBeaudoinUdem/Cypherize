@@ -16,7 +16,7 @@ export default function DocPage({ searchParams }) {
   return (
     <article className="prose prose-invert max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-white mb-4">{section.title}</h1>
-      
+
       <div className="my-6 aspect-video w-full rounded-lg overflow-hidden border border-[#2A3239] bg-[#1A2127]">
         {section.mediaType === 'video' ? (
           <video
@@ -38,7 +38,7 @@ export default function DocPage({ searchParams }) {
         )}
       </div>
 
-      <p className="text-zinc-300 leading-relaxed">
+      <p className="text-white whitespace-pre-line">
         {section.description}
       </p>
     </article>

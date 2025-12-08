@@ -2,7 +2,7 @@ export const docData = [
   {
     "id": "installation",
     "title": "Getting Started",
-    "description": "Prerequisites:\n• Node.js (v18 or higher).\n• AI Backend Setup (Choose one):\n\nOption A: Local (Recommended for Privacy)\n1. Download and install LM Studio.\n2. Search for and download the 'Codestral 22B' model.\n3. Start the Local Server (default port 1234).\n\nOption B: Cloud (Recommended for Performance)\n• Use the Mistral AI API (Free API key available for testing).\n\nInstallation Steps:\n1. Clone the project:\ngit clone https://github.com/GabrielBeaudoinUdem/Cypherize.git\ncd Cypherize\n\n2. Install dependencies:\nnpm install\n\n3. Start the development server:\nnpm run dev",
+    "description": "Prerequisites:\n • Node.js (v18 or higher).\n• AI Backend Setup (Choose one):\n\nOption A: Local (Recommended for Privacy)\n1. Download and install LM Studio.\n2. Search for and download the 'Codestral 22B' model.\n3. Start the Local Server (default port 1234).\n\nOption B: Cloud (Recommended for Performance)\n• Use the Mistral AI API (Free API key available for testing).\n\nInstallation Steps:\n1. Clone the project:\ngit clone https://github.com/GabrielBeaudoinUdem/Cypherize.git\ncd Cypherize\n\n2. Install dependencies:\nnpm install\n\n3. Start the development server:\nnpm run dev",
     "mediaType": "image",
     "mediaSrc": "/doc/exempleImage.png"
   },

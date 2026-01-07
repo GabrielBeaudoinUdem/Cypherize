@@ -15,6 +15,7 @@
 
 Cypherize’s core innovation lies in its **hybrid interface**: it combines the power of **LLMs** (to translate natural language into Cypher queries) with the precision of **direct manipulation**. Cypherize enables users to explore a graph visually while querying it conversationally. Nodes can be dragged into the chat to semantically anchor queries.
 
+Demo: https://drive.google.com/file/d/1_a_wS49fJXtjlfpGC_4pq3gxa8h2eqYV/view?usp=sharing
 
 
 ## 🚀 Features
